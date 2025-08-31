@@ -1,0 +1,6 @@
+2025/08/31-10:15:05.684 3e54 Reusing MANIFEST D:\enterprisecrm\server\.wwebjs_auth\session-client1\Default\Local Storage\leveldb/MANIFEST-000001
+2025/08/31-10:15:05.735 3e54 Recovering log #36
+2025/08/31-10:15:05.738 3e54 Reusing old log D:\enterprisecrm\server\.wwebjs_auth\session-client1\Default\Local Storage\leveldb/000036.log 
+2025/08/31-10:18:02.850 4bd0 Level-0 table #40: started
+2025/08/31-10:18:02.906 4bd0 Level-0 table #40: 18355 bytes OK
+2025/08/31-10:18:03.036 4bd0 Delete type=0 #36
