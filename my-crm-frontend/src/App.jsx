@@ -22,11 +22,16 @@ import Returnspare from "./pages/spares/Returnspare.jsx";
 
 import Employee from "./pages/empl/Employee";
 import EmployeeList from "./pages/empl/EmployeeList";
-
+import { getData } from "./api";
 
 function App() {
   const [user, setUser] = useState(null);
-
+const [data, setData] = useState(null);
+ useEffect(() => {
+    getData()
+      .then((res) => setData(res))
+      .catch((err) => console.error(err));
+  }, []);
   return (
     <>
       {!user ? (
