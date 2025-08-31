@@ -8,7 +8,9 @@ import multer from "multer";
 import { fileURLToPath } from "url";
 import moment from "moment";
 import { sendCallAssignedMessage, sendSpareAllocatedMessage } from "./sendWhatsapp.js";
-
+import { brandClientMap } from "./whatsappClients.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 
 // Required for __dirname in ES module
@@ -20,13 +22,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Atlas connection
-const mongoURI = "mongodb+srv://adminraje:admin@enterprisecluster.o4dtdjc.mongodb.net/crm";
-mongoose
-  .connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
+mongoose.connect(process.env.MONGO_URI, {
+  dbName: "enterprisecrm"
+}).then(() => {
+  console.log("✅ MongoDB connected");
+}).catch(err => {
+  console.error("❌ MongoDB connection error:", err);
+});
 // Schema and Model
 const callSchema = new mongoose.Schema({
   brand: { type: String, required: true },
