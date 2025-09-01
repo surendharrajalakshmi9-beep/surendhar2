@@ -22,7 +22,7 @@ import Returnspare from "./pages/spares/Returnspare.jsx";
 
 import Employee from "./pages/empl/Employee";
 import EmployeeList from "./pages/empl/EmployeeList";
-import { getData } from "./api";
+//import { getData } from "./api";
 
 function App() {
   const [user, setUser] = useState(null);
