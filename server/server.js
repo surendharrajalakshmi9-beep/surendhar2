@@ -1544,8 +1544,7 @@ app.put("/api/employees/:id", async (req, res) => {
 // ==========================
 // 🔹 Serve React frontend build (dist folder at project root)
 // ==========================
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
 
 // Point to ../dist since backend is in /backend
 const frontendPath = path.join(__dirname, "../dist");
