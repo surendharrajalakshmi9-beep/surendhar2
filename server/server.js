@@ -1549,11 +1549,9 @@ app.put("/api/employees/:id", async (req, res) => {
 // Serve frontend build
 app.use(express.static(path.join(__dirname, "../my-crm-frontend/dist")));
 
-// Catch-all route for React Router
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../my-crm-frontend/dist/index.html"));
+  res.sendFile(path.resolve(__dirname, "../my-crm-frontend/dist", "index.html"));
 });
-
 
 // ==========================
 // 🔹 Start Server
