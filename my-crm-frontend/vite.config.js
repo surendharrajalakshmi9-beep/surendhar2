@@ -21,7 +21,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../dist',   // put build output in root /dist
+    outDir: 'dist',   // put build output in root /dist
     emptyOutDir: true,   // clean dist before each build
   },
 })
