@@ -4,8 +4,12 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server/server.js",
-    "dev": "nodemon server/server.js"
+       "install": "cd my-crm-frontend && npm install && cd ../server && npm install",
+    "build": "cd my-crm-frontend && npm run build",
+    "start": "cd server && node server.js"
+  
+}
+
   },
   "dependencies": {
     "cors": "^2.8.5",
