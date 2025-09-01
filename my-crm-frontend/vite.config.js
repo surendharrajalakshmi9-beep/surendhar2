@@ -4,9 +4,13 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),  // <-- this is the alias
+   server: {
+    proxy: {
+      "/api": {
+        target: "https://enterprisecrm-backend.onrender.com",
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
-})
+});
