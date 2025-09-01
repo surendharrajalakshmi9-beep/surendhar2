@@ -1541,18 +1541,21 @@ app.put("/api/employees/:id", async (req, res) => {
   }
 });
 
-// ==========================
-// 🔹 Serve React frontend build (dist folder at project root)
-// ==========================
+// ---------------------------
+// Serve React frontend in production
+// ---------------------------
+if (process.env.NODE_ENV === "production") {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const frontendPath = path.join(__dirname, "../my-crm-frontend/dist");
 
+  // Serve static files from React build
+  app.use(express.static(frontendPath));
 
-// Serve frontend build
-app.use(express.static(path.join(__dirname, "../my-crm-frontend/dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "../my-crm-frontend/dist", "index.html"));
-});
-
+  // Catch-all: send index.html for any non-API route
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(frontendPath, "index.html"));
+  });
+}
 // ==========================
 // 🔹 Start Server
 // ==========================
