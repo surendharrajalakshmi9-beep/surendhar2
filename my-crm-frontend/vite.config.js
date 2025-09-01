@@ -1,6 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { Card, CardContent } from "@/components/ui/card";
+
 
 export default defineConfig({
   plugins: [react()],
