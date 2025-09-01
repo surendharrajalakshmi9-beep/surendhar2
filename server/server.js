@@ -1546,18 +1546,14 @@ app.put("/api/employees/:id", async (req, res) => {
 // ==========================
 
 
-// Point to ../dist since backend is in /backend
-const frontendPath = path.join(__dirname, "../dist");
+// Serve frontend build
+app.use(express.static(path.join(__dirname, "../my-crm-frontend/dist")));
 
-// Serve static files
-app.use(express.static(frontendPath));
-
-// Catch-all handler to send React’s index.html
+// Catch-all route for React Router
 app.get("*", (req, res) => {
-  if (!req.path.startsWith("/api")) {
-    res.sendFile(path.join(frontendPath, "index.html"));
-  }
+  res.sendFile(path.join(__dirname, "../my-crm-frontend/dist/index.html"));
 });
+
 
 // ==========================
 // 🔹 Start Server
