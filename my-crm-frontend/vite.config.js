@@ -11,6 +11,9 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
       },
+      alias: {
+      '@': path.resolve(__dirname, './src'),  // <-- this is the alias
+    },
     },
   },
 });
