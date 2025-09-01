@@ -7,7 +7,7 @@
         "postinstall": "cd my-crm-frontend && npm install && npm run build && cd ../server && npm install",
     "start": "cd server && node server.js"
   
-}
+
 
   },
   "dependencies": {
