@@ -4,16 +4,22 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-   server: {
-    proxy: {
-      "/api": {
-        target: "https://enterprisecrm-backend.onrender.com",
-        changeOrigin: true,
-        secure: true,
-      },
-      alias: {
-      '@': path.resolve(__dirname, './src'),  // <-- this is the alias
-    },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),  // your alias stays
     },
   },
-});
+  server: {
+    proxy: {
+      // During local dev: forward /api requests to backend
+      '/api': {
+        target: 'http://localhost:5000',  // backend dev server
+        changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    outDir: '../dist',   // put build output in root /dist
+    emptyOutDir: true,   // clean dist before each build
+  },
+})
