@@ -24,7 +24,7 @@ const Returnspare = () => {
 
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/spares/return", {
+      const res = await axios.get("/api/spares/return", {
         params: { brand, fromDate, toDate, mslStatus, condition },
       });
 
@@ -84,7 +84,7 @@ const Returnspare = () => {
     }));
 
     try {
-      await axios.post("http://localhost:5000/api/spares/return", {
+      await axios.post("/api/spares/return", {
         selectedSpares: payload,
         returnType: condition,
       });
