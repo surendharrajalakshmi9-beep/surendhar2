@@ -27,11 +27,7 @@ import EmployeeList from "./pages/empl/EmployeeList";
 function App() {
   const [user, setUser] = useState(null);
 const [data, setData] = useState(null);
- useEffect(() => {
-    getData()
-      .then((res) => setData(res))
-      .catch((err) => console.error(err));
-  }, []);
+
   return (
     <>
       {!user ? (
