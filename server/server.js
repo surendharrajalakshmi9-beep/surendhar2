@@ -9,8 +9,8 @@ import { fileURLToPath } from "url";
 import moment from "moment";
 import { sendCallAssignedMessage, sendSpareAllocatedMessage } from "./sendWhatsapp.js";
 import { brandClientMap } from "./whatsappClients.js";
-import dotenv from "dotenv";
-dotenv.config();
+//import dotenv from "dotenv";
+//dotenv.config();
 
 
 // Required for __dirname in ES module
