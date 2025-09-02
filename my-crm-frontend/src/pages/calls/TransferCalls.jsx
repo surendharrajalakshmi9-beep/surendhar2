@@ -20,7 +20,7 @@ export default function TransferCalls() {
 
   // 🔹 Fetch technicians from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/technicians")
+    fetch("/api/technicians")
       .then((res) => res.json())
       .then((data) => setTechnicians(data))
       .catch((err) => console.error("Error fetching technicians:", err));
@@ -31,7 +31,7 @@ export default function TransferCalls() {
     if (!selectedTech) return;
     try {
       const res = await fetch(
-        `http://localhost:5000/api/calls/technician?technician=${selectedTech}`
+        `/api/calls/technician?technician=${selectedTech}`
       );
       const data = await res.json();
       setCalls(data);
@@ -59,7 +59,7 @@ export default function TransferCalls() {
     }
     try {
       const res = await fetch(
-        `http://localhost:5000/api/calls/technician-count/${tech}`
+        `/api/calls/technician-count/${tech}`
       );
       const data = await res.json();
       setTechnicianCount(data.count || 0);
@@ -74,7 +74,7 @@ export default function TransferCalls() {
     if (selectedCalls.length === 0) return toast.error("Select calls");
 
     try {
-      const res = await fetch("http://localhost:5000/api/calls/transfer", {
+      const res = await fetch("/api/calls/transfer", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ callNos: selectedCalls, newTechnician: newTech }),
