@@ -1523,7 +1523,7 @@ app.put("/api/employees/:id", async (req, res) => {
 // ---------------------------
 // Serve React frontend in production
 // ---------------------------
-/*if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production") {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const frontendPath = path.join(__dirname, "../my-crm-frontend/dist");
 
@@ -1531,10 +1531,13 @@ app.put("/api/employees/:id", async (req, res) => {
   app.use(express.static(frontendPath));
 
   // Catch-all: send index.html for any non-API route
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(frontendPath, "index.html"));
-  });
-}*/
+ app.get(/.*/, (req, res) => {
+   console.log("✅ Mounted frontend catch-all route");
+
+  res.sendFile(path.resolve(frontendPath, "index.html"));
+});
+
+}
 // ==========================
 // 🔹 Start Server
 // ==========================
