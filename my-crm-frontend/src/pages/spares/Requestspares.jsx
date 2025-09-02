@@ -17,7 +17,7 @@ export default function Requestspares() {
   useEffect(() => {
     const fetchSpares = async () => {
       try {
-        const spareRes = await axios.get("http://localhost:5000/api/spares");
+        const spareRes = await axios.get("/api/spares");
         setSpares(spareRes.data.map(s => s.itemNo)); // store spare codes only
       } catch (error) {
         console.error("Error fetching spares:", error);
@@ -36,7 +36,7 @@ export default function Requestspares() {
       setLoading(true);
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/callDetailsWithSpare?brand=${brand}`
+          `/api/callDetailsWithSpare?brand=${brand}`
         );
         const filtered = res.data.filter(
           (call) => call.spareCode?.trim() !== ""
@@ -54,7 +54,7 @@ export default function Requestspares() {
  // Allocate handler
 const handleAllocate = async (callNo) => {
   try {
-    await axios.post(`http://localhost:5000/api/allocate/${callNo}`, {
+    await axios.post(`/api/allocate/${callNo}`, {
       status: "Spare Allocated"
     });
     toast.success("Spare allocated successfully!");
@@ -69,7 +69,7 @@ const handleAllocate = async (callNo) => {
   // Reject handler
   const handleReject = async (callNo) => {
     try {
-      await axios.put(`http://localhost:5000/api/calldetails/${callNo}`, {
+      await axios.put(`/api/calldetails/${callNo}`, {
         spareCode: "",
         spareName: "",
         quantity: "",
