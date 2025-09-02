@@ -32,7 +32,7 @@ export default function ManualCalls() {
     if (!form.callSubtype) return toast.error("Please select Call Subtype");
 
     try {
-      const res = await fetch("http://localhost:5000/api/calls", {
+      const res = await fetch("/api/calls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
