@@ -54,7 +54,7 @@ export default function Reports() {
       params.append("dateType", "completionDate");
     }
 
-      const res = await fetch(`http://localhost:5000/api/calls/report?${params.toString()}`);
+      const res = await fetch(`/api/calls/report?${params.toString()}`);
       const data = await res.json();
       setReportData(data.data || []);
       setReportCount(data.totalCount || 0);
@@ -68,7 +68,7 @@ export default function Reports() {
 
   // 🔹 Fetch technicians from backend
   useEffect(() => {
-    fetch("http://localhost:5000/api/technicians")
+    fetch("/api/technicians")
       .then((res) => res.json())
       .then((data) => setTechnicians(data))
       .catch((err) => console.error("Error fetching technicians:", err));
