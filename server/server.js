@@ -208,25 +208,6 @@ app.put("/api/incomingspares/:itemNo", async (req, res) => {
 
 
 
-// Fetch call details with spareCode not empty
-app.get("/api/callDetailsWithSpare", async (req, res) => {
-  try {
-    const { brand } = req.query;
-    let query = { spareCode: { $ne: "" } };
-
-    if (brand) {
-      query.brand = brand; // filter by brand if provided
-    }
-
-    const calls = await CallDetail.find(query);
-    res.json(calls);
-  } catch (error) {
-    res.status(500).json({ error: "Error fetching spare requests" });
-  }
-});
-
-
-
 app.post("/api/allocate/:callNo", async (req, res) => {
   try {
     const callNo = req.params.callNo;
@@ -1550,7 +1531,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(frontendPath));
 
   // Catch-all: send index.html for any non-API route
-  app.get("*", (req, res) => {
+  app.get("/*", (req, res) => {
     res.sendFile(path.resolve(frontendPath, "index.html"));
   });
 }
