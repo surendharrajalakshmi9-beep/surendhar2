@@ -31,7 +31,7 @@ export default function DashboardCards() {
 
   // Fetch counts from backend based on brand
   useEffect(() => {
-    fetch(`http://localhost:5000/api/dashboardCounts?brand=${brand}`)
+    fetch(`/api/dashboardCounts?brand=${brand}`)
       .then((res) => res.json())
       .then((data) => setCounts(data))
       .catch((err) => console.error("Error fetching counts:", err));
