@@ -15,7 +15,7 @@ export default function UploadCalls() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://localhost:5000/api/calls/upload", {
+      const res = await fetch("/api/calls/upload", {
         method: "POST",
         body: formData,
       });
