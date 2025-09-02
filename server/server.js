@@ -1531,7 +1531,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(frontendPath));
 
   // Catch-all: send index.html for any non-API route
-  app.get("/*", (req, res) => {
+  app.get("*", (req, res) => {
     res.sendFile(path.resolve(frontendPath, "index.html"));
   });
 }
