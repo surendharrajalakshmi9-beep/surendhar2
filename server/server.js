@@ -32,9 +32,7 @@ mongoose
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.error("❌ MongoDB connection error:", err));
 
-app.get("/", (req, res) => {
-  res.send("✅ Server is running!");
-});
+
 // Schema and Model
 const callSchema = new mongoose.Schema({
   brand: { type: String, required: true },
