@@ -9,7 +9,7 @@ function Cnupdate() {
 
  const fetchData = async () => {
   try {
-    const res = await fetch(`http://localhost:5000/api/returnspares?brand=${brand}`);
+    const res = await fetch(`/api/returnspares?brand=${brand}`);
     if (!res.ok) throw new Error("Network response was not ok");
     const data = await res.json();
     setRecords(data);
@@ -39,7 +39,7 @@ function Cnupdate() {
       return;
     }
     try {
-      await fetch("http://localhost:5000/api/returnspares/cnreceived", {
+      await fetch("/api/returnspares/cnreceived", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: selectedRecords }),
