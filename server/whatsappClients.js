@@ -44,7 +44,12 @@ function createClient(clientId) {
   client.on("authenticated", () => console.log(`🔐 ${clientId} authenticated`));
   client.on("ready", () => console.log(`✅ ${clientId} is ready`));
   client.on("disconnected", (reason) => console.log(`⚠️ ${clientId} disconnected: ${reason}`));
+client.on("auth_failure", (msg) => console.error(`❌ ${clientId} auth failure:`, msg));
+client.on("loading_screen", (percent, message) => console.log(`⏳ ${clientId} loading`, percent, message));
+client.on("remote_session_saved", () => console.log(`💾 ${clientId} session saved`));
+client.on("error", (err) => console.error(`❌ ${clientId} error:`, err));
 
+  
   client.initialize();
   return client;
 }
