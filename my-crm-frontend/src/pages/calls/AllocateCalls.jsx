@@ -23,7 +23,7 @@ export default function AllocatedCalls() {
  
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/technicians")  // adjust URL based on your backend setup
+    fetch("/api/technicians")  // adjust URL based on your backend setup
       .then((res) => res.json())
       .then((data) => setTechnicians(data))
       .catch((err) => console.error("Error fetching technicians:", err));
@@ -31,7 +31,7 @@ export default function AllocatedCalls() {
   const fetchFilters = async (brandName) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/calls/filters?brand=${brandName}`
+        `/api/calls/filters?brand=${brandName}`
       );
       const data = await res.json();
       setProducts(data.products || []);
@@ -52,7 +52,7 @@ const [totalCount, setTotalCount] = useState(0);
       params.append("pincodes", selectedPincodes.join(","));
     params.append("status", ""); // only unassigned calls
 
-    const res = await fetch(`http://localhost:5000/api/calls/filter?${params.toString()}`);
+    const res = await fetch(`/api/calls/filter?${params.toString()}`);
     const data = await res.json();
     setCalls(data.calls || []);
     setTotalCount(data.count || 0);
@@ -76,7 +76,7 @@ const fetchCallCount = async () => {
       params.append("pincodes", selectedPincodes.join(","));
 
     const res = await fetch(
-      `http://localhost:5000/api/calls/filter-count?${params.toString()}`
+      `/api/calls/filter-count?${params.toString()}`
     );
     const data = await res.json();
     setCallCount(data.count || 0);
@@ -115,7 +115,7 @@ useEffect(() => {
       return toast.error("Select at least one call");
 
     try {
-      const res = await fetch("http://localhost:5000/api/calls/assign", {
+      const res = await fetch("/api/calls/assign", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -144,7 +144,7 @@ const fetchTechnicianCount = async (tech) => {
     return;
   }
   try {
-    const res = await fetch(`http://localhost:5000/api/calls/technician-count/${tech}`);
+    const res = await fetch(`/api/calls/technician-count/${tech}`);
     const data = await res.json();
     setTechnicianCount(data.count || 0);
   } catch {
@@ -162,7 +162,7 @@ const fetchTechnicianCount = async (tech) => {
   const handleDelete = async (callNo) => {
     if (!window.confirm("Delete this call?")) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/calls/${callNo}`, {
+      const res = await fetch(`/api/calls/${callNo}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -177,7 +177,7 @@ const fetchTechnicianCount = async (tech) => {
   const handleEditSave = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/calls/${editData.callNo}`,
+        `/api/calls/${editData.callNo}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
