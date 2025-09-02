@@ -7,7 +7,7 @@ const EmployeeList = () => {
 
   // Fetch employees
   const fetchEmployees = async () => {
-    try {-
+    try {
       const res = await fetch("/api/employees");
       const data = await res.json();
       setEmployees(data);
