@@ -10,7 +10,7 @@ export default function SearchCalls() {
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/calls/search?query=${encodeURIComponent(searchText)}`
+        `/api/calls/search?query=${encodeURIComponent(searchText)}`
       );
       if (!res.ok) {
         toast.error("No calls found");
