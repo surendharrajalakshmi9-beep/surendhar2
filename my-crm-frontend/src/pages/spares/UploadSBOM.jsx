@@ -15,7 +15,7 @@ export default function UploadSBOM() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://localhost:5000/api/calls/uploadsbom", {
+      const res = await fetch("/api/calls/uploadsbom", {
         method: "POST",
         body: formData,
       });
