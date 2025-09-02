@@ -17,7 +17,7 @@ const IncomingSpares = () => {
   // Fetch item name when itemNo changes
   useEffect(() => {
     if (itemNo.trim() !== "") {
-      axios.get(`http://localhost:5000/api/items/${itemNo}`)
+      axios.get(`/api/items/${itemNo}`)
         .then(res => {
           if (res.data) setItemName(res.data.item_name || "");
         })
@@ -32,7 +32,7 @@ const handleSubmit = async (e) => {
   try {
     // Step 1: Check if spare already exists
     const { data: existingSpare } = await axios.get(
-      `http://localhost:5000/api/incomingspares/${itemNo}`
+      `/api/incomingspares/${itemNo}`
     );
 
     if (existingSpare) {
@@ -40,7 +40,7 @@ const handleSubmit = async (e) => {
         // ✅ Update quantity if MSL type matches
         const updatedQuantity = parseInt(quantity, 10);
 
-        await axios.put(`http://localhost:5000/api/incomingspares/${itemNo}`, {
+        await axios.put(`/api/incomingspares/${itemNo}`, {
           quantity: updatedQuantity,
           datespare, // update to provided date
         });
@@ -48,7 +48,7 @@ const handleSubmit = async (e) => {
         toast.success("Spare quantity updated successfully!");
       } else {
         // 🚀 Create new record if MSL type is different
-        await axios.post("http://localhost:5000/api/incomingspares", {
+        await axios.post("/api/incomingspares", {
           brand,
           itemNo,
           itemName,
@@ -61,7 +61,7 @@ const handleSubmit = async (e) => {
       }
     } else {
       // 🆕 No existing spare → create new record
-      await axios.post("http://localhost:5000/api/incomingspares", {
+      await axios.post("/api/incomingspares", {
         brand,
         itemNo,
         itemName,
