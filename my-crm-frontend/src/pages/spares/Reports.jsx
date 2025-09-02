@@ -18,7 +18,7 @@ const Reports = () => {
     }
 
     try {
-      let url = `http://localhost:5000/api/reports?brand=${brand}&reportType=${reportType}`;
+      let url = `/api/reports?brand=${brand}&reportType=${reportType}`;
 
       if (reportType === "Spare Availability" && spareCode) {
         url += `&spareCode=${spareCode}`;
