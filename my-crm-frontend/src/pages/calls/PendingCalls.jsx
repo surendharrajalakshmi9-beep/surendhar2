@@ -16,7 +16,7 @@ const [spareName, setSpareName] = useState("");
 // Fetch item name when spareCode changes
 useEffect(() => {
   if (spareCode.trim() !== "") {
-    fetch(`http://localhost:5000/api/items/${spareCode}`)
+    fetch(`/api/items/${spareCode}`)
       .then((res) => res.json())
       .then((data) => {
         if (data) {
@@ -36,7 +36,7 @@ useEffect(() => {
   const fetchCalls = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/calls/pending?brand=${brand || "all"}`
+        `/api/calls/pending?brand=${brand || "all"}`
       );
       const data = await res.json();
 
@@ -72,7 +72,7 @@ useEffect(() => {
       params.append("pendingWith", pendingWith);
 
       const res = await fetch(
-        `http://localhost:5000/api/calls/pending-count?${params.toString()}`
+        `/api/calls/pending-count?${params.toString()}`
       );
       const data = await res.json();
       setPendingCount(data.count || 0);
@@ -106,7 +106,7 @@ useEffect(() => {
     const payload = { callNos: selectedCalls, status, extra: extraFields };
 
     try {
-      const res = await fetch("http://localhost:5000/api/calls/updateStatus", {
+      const res = await fetch("/api/calls/updateStatus", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
