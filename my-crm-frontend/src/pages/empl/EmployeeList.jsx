@@ -7,8 +7,8 @@ const EmployeeList = () => {
 
   // Fetch employees
   const fetchEmployees = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/employees");
+    try {-
+      const res = await fetch("/api/employees");
       const data = await res.json();
       setEmployees(data);
     } catch (err) {
@@ -31,7 +31,7 @@ const EmployeeList = () => {
     e.preventDefault();
     try {
       const res = await fetch(
-        `http://localhost:5000/api/employees/${editingEmployee._id}`,
+        `/api/employees/${editingEmployee._id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
