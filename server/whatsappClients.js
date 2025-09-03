@@ -23,18 +23,18 @@ function createClient(clientId) {
       store,
       backupSyncIntervalMs: 300000, // optional
     }),
-    puppeteer: {
-      headless: false,
-      args: ["--no-sandbox",
+puppeteer: {
+  headless: true,
+  args: [
+    "--no-sandbox",
     "--disable-setuid-sandbox",
     "--disable-dev-shm-usage",
     "--disable-accelerated-2d-canvas",
-    "--no-first-run",
     "--no-zygote",
-    "--single-process", // sometimes needed
-    "--disable-gpu"],
-    },
-  });
+    "--single-process",
+    "--disable-gpu"
+  ],
+}
 
   client.on("qr", (qr) => {
     console.log(`\n📱 Scan QR for ${clientId}:`);
