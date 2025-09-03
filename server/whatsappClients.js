@@ -34,7 +34,7 @@ puppeteer: {
     "--single-process",
     "--disable-gpu"
   ],
-}
+},  });
 
   client.on("qr", (qr) => {
     console.log(`\n📱 Scan QR for ${clientId}:`);
