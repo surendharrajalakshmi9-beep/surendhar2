@@ -177,6 +177,26 @@ app.get("/api/incomingspares/:itemNo", async (req, res) => {
   }
 });
 
+// Fetch call details with spareCode not empty
+app.get("/api/callDetailsWithSpare", async (req, res) => {
+  try {
+    const { brand } = req.query;
+    let query = { spareCode: { $ne: "" } };
+
+    if (brand) {
+      query.brand = brand; // filter by brand if provided
+    }
+
+    const calls = await CallDetail.find(query);
+    res.json(calls);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching spare requests" });
+  }
+});
+
+
+
+
 // Update spare quantity & date
 app.put("/api/incomingspares/:itemNo", async (req, res) => {
   try {
