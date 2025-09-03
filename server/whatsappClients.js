@@ -24,7 +24,7 @@ function createClient(clientId) {
       backupSyncIntervalMs: 300000, // optional
     }),
     puppeteer: {
-      headless: true,
+      headless: false,
       args: ["--no-sandbox",
     "--disable-setuid-sandbox",
     "--disable-dev-shm-usage",
@@ -40,10 +40,21 @@ function createClient(clientId) {
     console.log(`\n📱 Scan QR for ${clientId}:`);
     qrcode.generate(qr, { small: true });
   });
-client.on("auth_failure", (msg) => console.error(`❌ ${clientId} auth failure:`, msg));
-client.on("loading_screen", (percent, message) => console.log(`⏳ ${clientId} loading`, percent, message));
-client.on("remote_session_saved", () => console.log(`💾 ${clientId} session saved`));
-client.on("error", (err) => console.error(`❌ ${clientId} error:`, err));
+
+
+client.on("remote_session_saved", () =>
+  console.log(`💾 ${clientId} session saved to Mongo`)
+);
+
+client.on("auth_failure", (msg) =>
+  console.error(`❌ ${clientId} auth failure:`, msg)
+);
+
+client.on("loading_screen", (percent, message) =>
+  console.log(`📊 ${clientId} loading ${percent}%: ${message}`)
+);
+
+  
   client.on("authenticated", () => console.log(`🔐 ${clientId} authenticated`));
   client.on("ready", () => console.log(`✅ ${clientId} is ready`));
   client.on("disconnected", (reason) => console.log(`⚠️ ${clientId} disconnected: ${reason}`));
