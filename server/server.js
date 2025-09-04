@@ -1359,13 +1359,35 @@ app.put("/api/calls/transfer", async (req, res) => {
       { $set: { technician: newTechnician } }
     );
 
-    res.json({ success: true, message: "Technician updated successfully" });
-  } catch (err) {
-    console.error("Error transferring calls:", err);
-    res.status(500).json({ error: "Failed to transfer calls" });
+     // ✅ Send WhatsApp for each call
+for (const call of updatedCalls) {
+  await sendTransferCallAssignedMessage(
+    brand,
+    technician1.phone,
+    {
+      callNo: call.callNo,
+      name: call.customerName,
+      phone: call.phoneNo,
+      address: call.address,
+      pincode: call.pincode,
+      model: call.model,
+      product: call.product,
+      callSubtype: call.callSubtype,
+      natureOfComplaint: call.natureOfComplaint,
+      tat: call.tat, // keep TAT
+      status:call.status,
+    },
+    
+  );
+
+}
+    res.json({ message: "Call Transfered to Technician and messages sent successfully" });
+
+  } catch (error) {
+    console.error("Error transferring technician:", error);
+    res.status(500).json({ error: "Failed to assign technician" });
   }
 });
-
 // Get distinct products and pincodes based on brand
 app.get("/api/calls/filters", async (req, res) => {
   try {
