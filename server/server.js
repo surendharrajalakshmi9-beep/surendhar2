@@ -1363,7 +1363,6 @@ app.put("/api/calls/transfer", async (req, res) => {
     if (!technician1) {
       return res.status(404).json({ error: "Technician not found" });
     }
-
        // ✅ Fetch only the updated call details
     const updatedCalls = await CallDetail.find({ callNo: { $in: callNos } });
 
