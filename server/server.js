@@ -1358,11 +1358,19 @@ app.put("/api/calls/transfer", async (req, res) => {
       { callNo: { $in: callNos } },
       { $set: { technician: newTechnician } }
     );
+      // ✅ Fetch technician details
+    const technician1 = await Employee.findOne({ name: newTechnician });
+    if (!technician1) {
+      return res.status(404).json({ error: "Technician not found" });
+    }
+console.log("brand:"+brand+"phone:"+technician1.phone);
+       // ✅ Fetch only the updated call details
+    const updatedCalls = await CallDetail.find({ callNo: { $in: callNos } });
 
      // ✅ Send WhatsApp for each call
 for (const call of updatedCalls) {
   await sendTransferCallAssignedMessage(
-    brand,
+    call.brand,
     technician1.phone,
     {
       callNo: call.callNo,
