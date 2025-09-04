@@ -1366,33 +1366,34 @@ app.put("/api/calls/transfer", async (req, res) => {
        // ✅ Fetch only the updated call details
     const updatedCalls = await CallDetail.find({ callNo: { $in: callNos } });
 
-     // ✅ Send WhatsApp for each call
 for (const call of updatedCalls) {
-  await sendTransferCallAssignedMessage(
-    call.brand,
-    technician1.phone,
-    {
-      callNo: call.callNo,
-      name: call.customerName,
-      phone: call.phoneNo,
-      address: call.address,
-      pincode: call.pincode,
-      model: call.model,
-      product: call.product,
-      callSubtype: call.callSubtype,
-      natureOfComplaint: call.natureOfComplaint,
-      tat: call.tat, // keep TAT
-      status:call.status,
-    },
-    
-  );
+      console.log(`📞 Transferring Call ${call.callNo} (${call.brand}) → ${technician1.phone}`);
 
-}
-    res.json({ message: "Call Transfered to Technician and messages sent successfully" });
+      // Send WhatsApp notification
+      await sendTransferCallAssignedMessage(
+        call.brand,              // brand is now taken from each call
+        technician1.phone,       // technician’s WhatsApp number
+        {
+          callNo: call.callNo,
+          name: call.customerName,
+          phone: call.phoneNo,
+          address: call.address,
+          pincode: call.pincode,
+          model: call.model,
+          product: call.product,
+          callSubtype: call.callSubtype,
+          natureOfComplaint: call.natureOfComplaint,
+          tat: call.tat,
+          status: call.status,
+        }
+      );
+    }
+
+    res.json({ message: "✅ Calls transferred and WhatsApp messages sent" });
 
   } catch (error) {
-    console.error("Error transferring technician:", error);
-    res.status(500).json({ error: "Failed to assign technician" });
+    console.error("❌ Error transferring technician:", error);
+    res.status(500).json({ error: "Failed to transfer technician" });
   }
 });
 // Get distinct products and pincodes based on brand
