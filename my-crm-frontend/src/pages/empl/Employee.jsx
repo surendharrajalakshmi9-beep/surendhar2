@@ -74,7 +74,7 @@ const Employee = () => {
 
         {/* Phone */}
         <div>
-          <label className="block font-medium">Phone Number</label>
+          <label className="block font-medium">Phone Number (Start with 91)</label>
           <input
             type="tel"
             name="phone"
