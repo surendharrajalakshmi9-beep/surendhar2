@@ -1290,6 +1290,7 @@ app.put("/api/calls/updateStatus", async (req, res) => {
       if (extra?.defectiveSubmitted === "yes") {
         updateData.status = "completed";
         updateData.completionDate = extra?.completionDate || new Date();
+         updateData.defectiveSubmitted = "yes";
       } else {
         // Defective NOT returned → store amount received
         if (extra?.amountReceived !== undefined) {
