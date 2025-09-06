@@ -19,6 +19,8 @@ export const sendCallAssignedMessage = async (brand, number, call) => {
         hour12: true,
       });
     }
+    console.log("call.tat"+call.tat+""+tatFormatted);
+    
 
     const msg = `
 📞 *New Call Assigned*  
