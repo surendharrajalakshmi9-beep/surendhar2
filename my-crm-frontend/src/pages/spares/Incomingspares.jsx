@@ -130,7 +130,7 @@ const handleSubmit = async (e) => {
           <input
             type="text"
             value={itemName}
-            readOnly
+            
             className="mt-1 block w-full rounded-md border-gray-200 bg-gray-100 p-2"
           />
         </div>
