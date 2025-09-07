@@ -162,16 +162,26 @@ const Returnspare = () => {
                 <th className="border p-2">No. of Days</th> 
               </tr>
             </thead>
-           <tbody>
+       <tbody>
   {pageSpares.map((s, idx) => {
     const today = new Date();
+
+    // Choose the correct date field
     let dateField = condition === "good" ? s.datespare : s.completionDate;
     let daysDiff = null;
+    let formattedDate = "-";
 
     if (dateField) {
-      const parsedDate = new Date(dateField);
-      const diffTime = today - parsedDate;
-      daysDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Convert ms to days
+      // Parse using moment with expected formats
+      const m = moment(dateField, ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"], true);
+      if (m.isValid()) {
+        const parsedDate = m.toDate();
+        const diffTime = today - parsedDate;
+        daysDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        formattedDate = parsedDate.toLocaleDateString();
+      } else {
+        console.error("Invalid date format:", dateField);
+      }
     }
 
     return (
@@ -201,9 +211,7 @@ const Returnspare = () => {
             />
           </td>
         )}
-        <td className="border p-2">
-          {new Date(dateField).toLocaleDateString()}
-        </td>
+        <td className="border p-2">{formattedDate}</td>
         <td className="border p-2 text-center">
           {daysDiff !== null ? daysDiff : "-"}
         </td>
@@ -211,6 +219,7 @@ const Returnspare = () => {
     );
   })}
 </tbody>
+
 
           </table>
 
