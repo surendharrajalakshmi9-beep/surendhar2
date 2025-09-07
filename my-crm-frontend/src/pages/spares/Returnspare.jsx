@@ -125,7 +125,7 @@ const Returnspare = () => {
         </select>
 
         <select value={condition} onChange={(e) => setCondition(e.target.value)} className="border p-2 rounded">
-          <option value="">Good / Defective</option>
+          <option value="">Select</option>
           <option value="good">Good</option>
           <option value="defective">Defective</option>
         </select>
