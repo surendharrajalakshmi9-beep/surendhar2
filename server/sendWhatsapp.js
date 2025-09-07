@@ -1,11 +1,49 @@
 import { brandClientMap } from "./whatsappClients.js";
+import { brandTechnicianGroupMap } from "./whatsappClients.js";
 
+// 🔹 Helper: Ensure client is ready before sending
+const ensureClientReady = async (client, brand) => {
+  return new Promise((resolve, reject) => {
+    if (!client) return reject(`❌ No client for brand ${brand}`);
+
+    if (client.info) {
+      // Already ready
+      return resolve();
+    }
+
+    client.once("ready", () => {
+      console.log(`⚡ Client for ${brand} is ready now`);
+      resolve();
+    });
+
+    client.once("auth_failure", () => {
+      reject(`❌ Auth failure for ${brand}. Please rescan QR locally.`);
+    });
+
+    setTimeout(() => reject(`⏳ Timeout waiting for client: ${brand}`), 20000); // 20s
+  });
+};
 export const sendCallAssignedMessage = async (brand, number, call) => {
   try {
     const client = brandClientMap[brand];
-    if (!client) return console.error(`❌ No WhatsApp client mapped for brand: ${brand}`);
+    const technicianGroups = brandTechnicianGroupMap[brand];
 
-    // Format TAT (reduce 1 hour)
+    if (!client) {
+      console.error(`❌ No WhatsApp client for brand ${brand}`);
+      return;
+    }
+
+    if (!technicianGroups) {
+      console.error(`❌ No groups configured for brand ${brand}`);
+      return;
+    }
+
+    const groupId = technicianGroups[number];
+    if (!groupId) {
+      console.error(`❌ No group configured for technician ${number} in brand ${brand}`);
+      return;
+    }
+
     let tatFormatted = "N/A";
     if (call.tat) {
       const tatDate = new Date(call.tat);
@@ -19,8 +57,6 @@ export const sendCallAssignedMessage = async (brand, number, call) => {
         hour12: true,
       });
     }
-    console.log("call.tat"+call.tat+""+tatFormatted);
-    
 
     const msg = `
 📞 *New Call Assigned*  
@@ -36,8 +72,9 @@ export const sendCallAssignedMessage = async (brand, number, call) => {
 ---------------------------
     `;
 
-    await client.sendMessage(`${number}@c.us`, msg.trim());
-    console.log(`✅ Call assigned WhatsApp sent to ${number}`);
+    // ✅ fixed: use msg, not message
+    await client.sendMessage(groupId, msg.trim());
+    console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
   } catch (err) {
     console.error("❌ Error sending call assigned WhatsApp:", err);
   }
@@ -47,7 +84,23 @@ export const sendCallAssignedMessage = async (brand, number, call) => {
 export const sendSpareAllocatedMessage = async (brand, number, call, spare) => {
   try {
     const client = brandClientMap[brand];
-    if (!client) return console.error(`❌ No WhatsApp client mapped for brand: ${brand}`);
+   const technicianGroups = brandTechnicianGroupMap[brand];
+
+    if (!client) {
+      console.error(`❌ No WhatsApp client for brand ${brand}`);
+      return;
+    }
+
+    if (!technicianGroups) {
+      console.error(`❌ No groups configured for brand ${brand}`);
+      return;
+    }
+
+    const groupId = technicianGroups[number];
+    if (!groupId) {
+      console.error(`❌ No group configured for technician ${number} in brand ${brand}`);
+      return;
+    }
 
     const msg = `
 🔧 *Spare Allocated*  
@@ -62,18 +115,35 @@ export const sendSpareAllocatedMessage = async (brand, number, call, spare) => {
 🔢 Quantity: ${call.qty || 1}  
 ---------------------------
     `;
-
-    await client.sendMessage(`${number}@c.us`, msg.trim());
-    console.log(`✅ Spare allocated WhatsApp sent to ${number}`);
-  } catch (err) {
+ await client.sendMessage(groupId, msg.trim());
+    console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
+  }catch (err) {
     console.error("❌ Error sending spare allocated WhatsApp:", err);
   }
 };
 
+
 export const sendTransferCallAssignedMessage = async (brand, number, call) => {
   try {
     const client = brandClientMap[brand];
-    if (!client) return console.error(`❌ No WhatsApp client mapped for brand: ${brand}`);
+    const technicianGroups = brandTechnicianGroupMap[brand];
+
+    if (!client) {
+      console.error(`❌ No WhatsApp client for brand ${brand}`);
+      return;
+    }
+
+    if (!technicianGroups) {
+      console.error(`❌ No groups configured for brand ${brand}`);
+      return;
+    }
+
+    const groupId = technicianGroups[number];
+    if (!groupId) {
+      console.error(`❌ No group configured for technician ${number} in brand ${brand}`);
+      return;
+    }
+
 
     // Format TAT (reduce 1 hour)
     let tatFormatted = "N/A";
@@ -106,8 +176,8 @@ export const sendTransferCallAssignedMessage = async (brand, number, call) => {
 ---------------------------
     `;
 
-    await client.sendMessage(`${number}@c.us`, msg.trim());
-    console.log(`✅ Call assigned WhatsApp sent to ${number}`);
+    await client.sendMessage(groupId, msg.trim());
+    console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
   } catch (err) {
     console.error("❌ Error sending call assigned WhatsApp:", err);
   }
