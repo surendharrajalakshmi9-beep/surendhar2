@@ -915,8 +915,9 @@ app.post("/api/calls/upload", upload.single("file"), async (req, res) => {
             : row["Complaint From"] || "",
         type: row["Warranty Status"] || "",
         natureOfComplaint: row["Nature Of Complaint"] || "",
-      }));
-      console.log("date"+row["Complaint date"]);
+      }console.log("date"+row["Complaint date"]);
+                                 ));
+      
     } else if (brand === "Atomberg") {
       calls = sheet.map((row) => ({
         brand,
