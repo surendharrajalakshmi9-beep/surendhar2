@@ -893,49 +893,50 @@ app.post("/api/calls/upload", upload.single("file"), async (req, res) => {
         natureOfComplaint: row["Nature of Complaint"] || "",
       }));
     } else if (brand === "Bajaj") {
-      calls = sheet.map((row) => ({
-        brand,
-        callNo: row["Complaint number"],
-        phoneNo: row["Mobile No"] || "",
-        customerName: row["Name"],
-        address: row["Address"],
-        pincode: row["Pin code"],
-        callSubtype:
-          row["Call Type"] === "Complaint Call"
-            ? "Breakdown"
-            : row["Call Type"],
-        product: row["Product type"],
-        model: row["BU 3"],
-      const formats = ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"];
+    const formats = ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"]; // Date formats to try
 
-const dateValue = row["Complaint date"];
-let jsDate = null;
+    calls = sheet.map((row) => {
+        const dateValue = row["Complaint date"];
+        let jsDate = null;
 
-if (dateValue) {
-    if (typeof dateValue === "string") {
-        const m = moment(dateValue.trim(), formats, true);
-        if (m.isValid()) {
-            jsDate = m.toDate();
-        } else {
-            console.error("Invalid date format:", dateValue);
+        if (dateValue) {
+            if (typeof dateValue === "string") {
+                const m = moment(dateValue.trim(), formats, true);
+                if (m.isValid()) {
+                    jsDate = m.toDate();
+                } else {
+                    console.error("Invalid date format:", dateValue);
+                }
+            } else if (typeof dateValue === "number") {
+                // Excel serial date conversion
+                jsDate = new Date((dateValue - 25569) * 86400 * 1000);
+            }
         }
-    } else if (typeof dateValue === "number") {
-        jsDate = new Date((dateValue - 25569) * 86400 * 1000);
-    }
+
+        return {
+            brand,
+            callNo: row["Complaint number"],
+            phoneNo: row["Mobile No"] || "",
+            customerName: row["Name"],
+            address: row["Address"],
+            pincode: row["Pin code"],
+            callSubtype:
+                row["Call Type"] === "Complaint Call"
+                    ? "Breakdown"
+                    : row["Call Type"],
+            product: row["Product type"],
+            model: row["BU 3"],
+            tat: jsDate, // Parsed date stored here
+            callerType:
+                row["Complaint From"] === "End Customer"
+                    ? "Customer"
+                    : row["Complaint From"] || "",
+            type: row["Warranty Status"] || "",
+            natureOfComplaint: row["Nature Of Complaint"] || "",
+        };
+    });
 }
-
-tat: jsDate,
-
-        callerType:
-          row["Complaint From"] === "End Customer"
-            ? "Customer"
-            : row["Complaint From"] || "",
-        type: row["Warranty Status"] || "",
-        natureOfComplaint: row["Nature Of Complaint"] || "",
-      }
-                                 ));
-      
-    } else if (brand === "Atomberg") {
+ else if (brand === "Atomberg") {
       calls = sheet.map((row) => ({
         brand,
         callNo: row["Case Number"],
