@@ -8,7 +8,7 @@ import multer from "multer";
 import { fileURLToPath } from "url";
 import moment from "moment";
 import { sendCallAssignedMessage, sendSpareAllocatedMessage, sendTransferCallAssignedMessage } from "./sendWhatsapp.js";
-import { brandClientMap } from "./whatsappClients.js";
+import { brandClientMap, brandTechnicianGroupMap } from "./whatsappClients.js";
 import dotenv from "dotenv";
 dotenv.config();
 
