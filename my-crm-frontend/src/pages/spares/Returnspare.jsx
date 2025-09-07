@@ -159,42 +159,59 @@ const Returnspare = () => {
                 <th className="border p-2">Available Qty</th>
                 {condition === "good" && <th className="border p-2">Return Qty</th>}
                 <th className="border p-2">Spare Date</th>
+                <th className="border p-2">No. of Days</th> 
               </tr>
             </thead>
-            <tbody>
-              {pageSpares.map((s, idx) => (
-                <tr key={idx}>
-                  <td className="border p-2 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(s._id)}
-                      onChange={() => handleSelect(s._id)}
-                    />
-                  </td>
-                  <td className="border p-2">{s.brand}</td>
-                  <td className="border p-2">{s.spareCode || s.itemNo}</td>
-                  <td className="border p-2">{s.spareName || s.itemName}</td>
-                  <td className="border p-2">{s.qty || s.quantity}</td>
-                  {condition === "good" && (
-                    <td className="border p-2">
-                      <input
-                        type="number"
-                        min="1"
-                        max={s.qty || s.quantity}
-                        value={editQty[s._id] || ""}
-                        onChange={(e) =>
-                          handleQtyChange(s._id, e.target.value, s.qty || s.quantity)
-                        }
-                        className="border p-1 rounded w-20"
-                      />
-                    </td>
-                  )}
-                  <td className="border p-2">
-                    {new Date(s.completionDate || s.datespare).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+           <tbody>
+  {pageSpares.map((s, idx) => {
+    const today = new Date();
+    let dateField = condition === "good" ? s.datespare : s.completionDate;
+    let daysDiff = null;
+
+    if (dateField) {
+      const parsedDate = new Date(dateField);
+      const diffTime = today - parsedDate;
+      daysDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24)); // Convert ms to days
+    }
+
+    return (
+      <tr key={idx}>
+        <td className="border p-2 text-center">
+          <input
+            type="checkbox"
+            checked={selected.includes(s._id)}
+            onChange={() => handleSelect(s._id)}
+          />
+        </td>
+        <td className="border p-2">{s.brand}</td>
+        <td className="border p-2">{s.spareCode || s.itemNo}</td>
+        <td className="border p-2">{s.spareName || s.itemName}</td>
+        <td className="border p-2">{s.qty || s.quantity}</td>
+        {condition === "good" && (
+          <td className="border p-2">
+            <input
+              type="number"
+              min="1"
+              max={s.qty || s.quantity}
+              value={editQty[s._id] || ""}
+              onChange={(e) =>
+                handleQtyChange(s._id, e.target.value, s.qty || s.quantity)
+              }
+              className="border p-1 rounded w-20"
+            />
+          </td>
+        )}
+        <td className="border p-2">
+          {new Date(dateField).toLocaleDateString()}
+        </td>
+        <td className="border p-2 text-center">
+          {daysDiff !== null ? daysDiff : "-"}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+
           </table>
 
           {/* Pagination */}
