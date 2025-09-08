@@ -165,25 +165,42 @@ const Returnspare = () => {
             </thead>
        <tbody>
   {pageSpares.map((s, idx) => {
-    const today = new Date();
+  const today = new Date();
+let daysDiff = null;
+let formattedDate = null;
 
-    // Choose the correct date field
-    let dateField = condition === "good" ? s.datespare : s.completionDate;
-    let daysDiff = null;
-    let formattedDate = "-";
-
-    if (dateField) {
-      // Parse using moment with expected formats
-      const m = moment(dateField, ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"], true);
-      if (m.isValid()) {
-        const parsedDate = m.toDate();
-        const diffTime = today - parsedDate;
-        daysDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        formattedDate = parsedDate.toLocaleDateString();
-      } else {
-        console.error("Invalid date format:", dateField);
-      }
+if (dateField) {
+  // Try several parsing strategies:
+  // 1) If it's already a Date
+  // 2) Strict ISO
+  // 3) Strict known formats (your old formats)
+  // 4) Loose moment parse (fallback)
+  let m;
+  if (moment.isDate(dateField)) {
+    m = moment(dateField);
+  } else {
+    m = moment(dateField, moment.ISO_8601, true); // strict ISO
+    if (!m.isValid()) {
+      m = moment(dateField, ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"], true); // your known formats
     }
+    if (!m.isValid()) {
+      m = moment(dateField); // fallback loose parse
+    }
+  }
+
+  if (m.isValid()) {
+    const parsedDate = m.toDate();
+
+    // Compute difference in whole days (date-only, avoids time-zone partial-day issues)
+    const utcToday = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    const utcParsed = Date.UTC(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
+    daysDiff = Math.floor((utcToday - utcParsed) / (1000 * 60 * 60 * 24));
+
+    formattedDate = parsedDate.toLocaleDateString();
+  } else {
+    console.error("Invalid date format:", dateField);
+  }
+}
 
     return (
       <tr key={idx}>
