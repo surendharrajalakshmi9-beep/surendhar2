@@ -39,10 +39,7 @@ export const sendCallAssignedMessage = async (brand, number, call) => {
     }
 
     const groupId = technicianGroups[number];
-    if (!groupId) {
-      console.error(`❌ No group configured for technician ${number} in brand ${brand}`);
-      return;
-    }
+
 
     let tatFormatted = "N/A";
     if (call.tat) {
@@ -71,10 +68,15 @@ export const sendCallAssignedMessage = async (brand, number, call) => {
 ⏰ Complete By: ${tatFormatted}  
 ---------------------------
     `;
-
-    // ✅ fixed: use msg, not message
-    await client.sendMessage(groupId, msg.trim());
+ if (!groupId) {
+      await client.sendMessage(`${number}@c.us`,msg.trim());
+      console.log(`Sent message for technician ${number} (${brand}) → personal chat`);
+      return;
+    }
+    else{
+await client.sendMessage(groupId, msg.trim());
     console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
+    }
   } catch (err) {
     console.error("❌ Error sending call assigned WhatsApp:", err);
   }
@@ -97,10 +99,7 @@ export const sendSpareAllocatedMessage = async (brand, number, call, spare) => {
     }
 
     const groupId = technicianGroups[number];
-    if (!groupId) {
-      console.error(`❌ No group configured for technician ${number} in brand ${brand}`);
-      return;
-    }
+ 
 
     const msg = `
 🔧 *Spare Allocated*  
@@ -115,8 +114,16 @@ export const sendSpareAllocatedMessage = async (brand, number, call, spare) => {
 🔢 Quantity: ${call.qty || 1}  
 ---------------------------
     `;
- await client.sendMessage(groupId, msg.trim());
+  if (!groupId) {
+      await client.sendMessage(`${number}@c.us`,msg.trim());
+      console.log(`Sent message for technician ${number} (${brand}) → personal chat`);
+      return;
+    }
+    else{
+await client.sendMessage(groupId, msg.trim());
     console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
+    }
+
   }catch (err) {
     console.error("❌ Error sending spare allocated WhatsApp:", err);
   }
@@ -176,8 +183,16 @@ export const sendTransferCallAssignedMessage = async (brand, number, call) => {
 ---------------------------
     `;
 
-    await client.sendMessage(groupId, msg.trim());
+     if (!groupId) {
+      await client.sendMessage(`${number}@c.us`,msg.trim());
+      console.log(`Sent message for technician ${number} (${brand}) → personal chat`);
+      return;
+    }
+    else{
+await client.sendMessage(groupId, msg.trim());
     console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
+    }
+
   } catch (err) {
     console.error("❌ Error sending call assigned WhatsApp:", err);
   }
