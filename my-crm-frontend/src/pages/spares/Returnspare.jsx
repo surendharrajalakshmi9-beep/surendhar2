@@ -169,22 +169,22 @@ const Returnspare = () => {
 let daysDiff = null;
 let formattedDate = null;
 
-if (dateField) {
+if (datespare) {
   // Try several parsing strategies:
   // 1) If it's already a Date
   // 2) Strict ISO
   // 3) Strict known formats (your old formats)
   // 4) Loose moment parse (fallback)
   let m;
-  if (moment.isDate(dateField)) {
-    m = moment(dateField);
+  if (moment.isDate(datespare)) {
+    m = moment(datespare);
   } else {
-    m = moment(dateField, moment.ISO_8601, true); // strict ISO
+    m = moment(datespare, moment.ISO_8601, true); // strict ISO
     if (!m.isValid()) {
-      m = moment(dateField, ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"], true); // your known formats
+      m = moment(datespare, ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"], true); // your known formats
     }
     if (!m.isValid()) {
-      m = moment(dateField); // fallback loose parse
+      m = moment(datespare); // fallback loose parse
     }
   }
 
