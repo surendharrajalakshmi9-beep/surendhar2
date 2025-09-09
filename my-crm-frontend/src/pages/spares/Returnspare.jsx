@@ -18,10 +18,7 @@ const Returnspare = () => {
   const totalPages = Math.ceil(spares.length / recordsPerPage);
 
   const fetchSpares = async () => {
-    if (!fromDate || !toDate) {
-      alert("Please select From and To dates");
-      return;
-    }
+   
 
     setLoading(true);
     try {
