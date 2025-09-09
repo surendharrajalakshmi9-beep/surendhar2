@@ -912,7 +912,23 @@ app.post("/api/calls/upload", upload.single("file"), async (req, res) => {
             natureOfComplaint: row["Nature Of Complaint"] || "",
         };
     });
-}
+} else  if (brand === "Usha") {
+      calls = sheet.map((row) => ({
+        brand,
+        callNo: row["Ticket Name"],
+        phoneNo: row["Mobile Number"],
+        customerName: row["Customer Name"],
+        address: row["Address"],
+        pincode: row["Pincode"],
+        type: row["Warranty"],
+        product: row["Product Name"],
+        model: row["Product Model"],
+        tat: row["Created Date"] ? new Date(row["Created Date"]) : null,
+        callerType: row["Customer Type"] || "",
+        callSubtype: row["Type"] === "After Use" || "Before Use" ? "Breakdown" : row["Type"] || "",
+        natureOfComplaint: row["Symptom"] || "",
+      }));
+    }
  else if (brand === "Atomberg") {
       calls = sheet.map((row) => ({
         brand,
