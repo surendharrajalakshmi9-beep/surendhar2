@@ -397,57 +397,36 @@ app.get("/api/technicians", async (req, res) => {
 });
 
 app.get("/api/spares/return", async (req, res) => {
-  const { brand, fromDate, toDate, mslStatus, condition,editQty } = req.query;
+  const { brand, fromDate, toDate, mslStatus, condition } = req.query;
 
   console.log("Received filters:", req.query);
 
   try {
-    let query = {
-      datespare: {
-        $gte: new Date(fromDate),
-        $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
-      },
-    };
+    let spares = [];
 
-    if (brand) query.brand = brand;
-    if (mslStatus) query.mslType = mslStatus;
-
-    console.log("Mongo Query:", query);
-
-    let spares = await Spare.find(query).lean();
-    console.log("Initial spares:", spares.length);
-
-   if (condition === "good") {
-  // ✅ Good spares come from Spare collection
-  let query = {
-    datespare: {
-      $gte: new Date(fromDate),
-      $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
-    },
-
-  };
-  
-
-  if (brand) query.brand = brand;
-
-  // ✅ Respect the user’s MSL / Non-MSL choice
-  if (mslStatus) query.mslType = mslStatus;
-  
-  console.log("Good query:", query);
-  spares = await Spare.find(query)
-    .select("brand itemNo itemName quantity datespare mslType")
-    .lean();
-  }
- else if (condition === "defective") {
-      // ✅ Defective spares come directly from CallDetails
-      let query = {
-        defectiveSubmitted: "yes",
-        completionDate: {
+    if (condition === "good") {
+      let query = {};
+      if (fromDate && toDate) {
+        query.datespare = {
           $gte: new Date(fromDate),
           $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
-        },
-      };
+        };
+      }
+      if (brand) query.brand = brand;
+      if (mslStatus) query.mslType = mslStatus;
 
+      console.log("Good query:", query);
+      spares = await Spare.find(query)
+        .select("brand itemNo itemName quantity datespare mslType")
+        .lean();
+    } else if (condition === "defective") {
+      let query = { defectiveSubmitted: "yes" };
+      if (fromDate && toDate) {
+        query.completionDate = {
+          $gte: new Date(fromDate),
+          $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
+        };
+      }
       if (brand) query.brand = brand;
 
       console.log("Defective query:", query);
@@ -456,17 +435,15 @@ app.get("/api/spares/return", async (req, res) => {
         .lean();
     }
 
-
     console.log("Final spares:", spares.length);
-    
     res.json(spares);
- 
 
-}catch (err) {
+  } catch (err) {
     console.error("Error fetching return spares:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 // --- Save Returned Spares ---
