@@ -165,42 +165,38 @@ const Returnspare = () => {
             </thead>
        <tbody>
   {pageSpares.map((s, idx) => {
-  const today = new Date();
-let daysDiff = null;
-let formattedDate = null;
-const dateField = spares.datespare;
-if (dateField) {
-  // Try several parsing strategies:
-  // 1) If it's already a Date
-  // 2) Strict ISO
-  // 3) Strict known formats (your old formats)
-  // 4) Loose moment parse (fallback)
-  let m;
-  if (moment.isDate(dateField)) {
-    m = moment(dateField);
-  } else {
-    m = moment(dateField, moment.ISO_8601, true); // strict ISO
-    if (!m.isValid()) {
-      m = moment(dateField, ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"], true); // your known formats
+    const today = new Date();
+    let daysDiff = null;
+    let formattedDate = null;
+
+    const dateField = s.datespare || s.completionDate; // Corrected here
+
+    if (dateField) {
+      let m;
+      if (moment.isDate(dateField)) {
+        m = moment(dateField);
+      } else {
+        m = moment(dateField, moment.ISO_8601, true);
+        if (!m.isValid()) {
+          m = moment(dateField, ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY"], true);
+        }
+        if (!m.isValid()) {
+          m = moment(dateField);
+        }
+      }
+
+      if (m.isValid()) {
+        const parsedDate = m.toDate();
+
+        const utcToday = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+        const utcParsed = Date.UTC(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
+        daysDiff = Math.floor((utcToday - utcParsed) / (1000 * 60 * 60 * 24));
+
+        formattedDate = parsedDate.toLocaleDateString();
+      } else {
+        console.error("Invalid date format:", dateField);
+      }
     }
-    if (!m.isValid()) {
-      m = moment(dateField); // fallback loose parse
-    }
-  }
-
-  if (m.isValid()) {
-    const parsedDate = m.toDate();
-
-    // Compute difference in whole days (date-only, avoids time-zone partial-day issues)
-    const utcToday = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-    const utcParsed = Date.UTC(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate());
-    daysDiff = Math.floor((utcToday - utcParsed) / (1000 * 60 * 60 * 24));
-
-    formattedDate = parsedDate.toLocaleDateString();
-  } else {
-    console.error("Invalid date format:", dateField);
-  }
-}
 
     return (
       <tr key={idx}>
@@ -229,7 +225,7 @@ if (dateField) {
             />
           </td>
         )}
-        <td className="border p-2">{formattedDate}</td>
+        <td className="border p-2">{formattedDate || "-"}</td>
         <td className="border p-2 text-center">
           {daysDiff !== null ? daysDiff : "-"}
         </td>
@@ -237,7 +233,6 @@ if (dateField) {
     );
   })}
 </tbody>
-
 
           </table>
 
