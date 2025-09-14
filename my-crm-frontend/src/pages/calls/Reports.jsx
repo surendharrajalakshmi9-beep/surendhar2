@@ -191,6 +191,7 @@ export default function Reports() {
             <option value="Ageing Calls">Ageing Calls</option>
              <option value="High Priority Calls">High Priority Calls</option>
              <option value="Appointment">Appointment</option>
+            <option value="Repeat Calls">Repeat Calls</option>
           </select>
         </div>
         <div>
