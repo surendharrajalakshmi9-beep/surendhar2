@@ -1259,7 +1259,36 @@ app.get("/api/calls/report", async (req, res) => {
         const hours = (Date.now() - new Date(c.assignedDate).getTime()) / (1000 * 60 * 60);
         return hours >= 46;
       });
+    }  else if (status === "Repeat Calls") {
+  // Get date range: last 60 days
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 60);
+
+  // First, find all calls within last 60 days
+  let last60DaysCalls = await CallDetail.find({
+    assignedDate: { $gte: startDate }
+  });
+
+  // Group calls by phoneNo + model
+  const repeatGroups = {};
+  last60DaysCalls.forEach(c => {
+    if (!c.phoneNo || !c.model) return;
+    const key = `${c.phoneNo}_${c.model}`;
+    if (!repeatGroups[key]) repeatGroups[key] = [];
+    repeatGroups[key].push(c);
+  });
+
+  // Keep only groups with more than 1 entry (repeat calls)
+  let repeatCalls = [];
+  Object.values(repeatGroups).forEach(group => {
+    if (group.length > 1) {
+      repeatCalls = repeatCalls.concat(group);
     }
+  });
+
+  calls = repeatCalls;
+}
+
 
     // Inside app.get("/api/calls/report")
 if (req.query.date === "today") {
@@ -1276,14 +1305,21 @@ if (req.query.date === "today") {
 }
 
     // Add TAT field to each call
+    // Add TAT field to each call
 calls = calls.map(c => {
-  const assigned = c.assignedDate ? new Date(c.assignedDate) : null;
-  let tat = null;
-  if (assigned) {
-    tat = Math.floor((Date.now() - assigned.getTime()) / (1000 * 60 * 60)); // hours
+let tat=null;
+
+  if (c.tat) {
+    // Parse as YYYY-DD-MM
+     const tatDate = moment(c.tat); // auto parse ISO
+    if (tatDate.isValid()) {
+      tat = moment().diff(tatDate, "hours"); // TAT in hours
+    }
   }
-  return { ...c._doc, tat }; // return call object with TAT
+
+  return { ...c._doc, tat };
 });
+  
 
     res.json({
       totalCount: calls.length,
