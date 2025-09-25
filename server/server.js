@@ -76,6 +76,15 @@ const sbomSchema = new mongoose.Schema({
 // Model
 const Sbom = mongoose.model("Sbom", sbomSchema);
 
+
+// ✅ Brand Schema
+const brandSchema = new mongoose.Schema({
+  name: { type: String, required: true, unique: true },
+});
+
+const Brand = mongoose.model("Brand", brandSchema);
+
+
 // Create Schema
 const spareSchema = new mongoose.Schema({
   brand: { type: String, default :""},
@@ -138,6 +147,16 @@ app.post("/api/calls", async (req, res) => {
     }
     console.error(error);
     res.status(500).json({ error: "Failed to save call details" });
+  }
+});
+
+// ✅ API to fetch all brands
+app.get("/api/brands", async (req, res) => {
+  try {
+    const brands = await Brand.find().sort({ name: 1 }); // alphabetically
+    res.json(brands);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch brands" });
   }
 });
 
