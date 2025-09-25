@@ -1,9 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function UploadCalls() {
+  const [brands, setBrands] = useState([]);
   const [brand, setBrand] = useState("");
   const [file, setFile] = useState(null);
+
+  // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,10 +58,11 @@ export default function UploadCalls() {
             className="border rounded p-2 w-full"
           >
             <option value="">Select Brand</option>
-            <option value="Havells">Havells</option>
-            <option value="Bajaj">Bajaj</option>
-            <option value="Usha">Usha</option>
-            <option value="Atomberg">Atomberg</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
           </select>
         </div>
 
