@@ -908,7 +908,7 @@ app.post("/api/calls/upload", upload.single("file"), async (req, res) => {
         natureOfComplaint: row["Nature of Complaint"] || "",
          };
     });
-} else if (brand === "Bajaj") {
+} else if (brand === "Bajaj - Surendhar Enterprises" || "Bajaj - S.R Enterprises") {
    
   const formats = ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY HH:mm", "DD/MM/YYYY"];
 // Function to convert Excel serial to JS Date
@@ -1173,7 +1173,7 @@ app.post("/api/calls/uploadsbom", upload.single("file"), async (req, res) => {
     const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
     // Example: only keep certain fields (Part Number, Description, Price)
-      if (brand === "Bajaj") {
+      if (brand === "Bajaj - S.R Enterprises" || "Bajaj - Surendhar Enterprises") {
     const records = sheetData.map(row => ({
       brand,
        productno:  row["PARENT_ITM_CD"] || "",
@@ -1358,7 +1358,7 @@ app.get("/api/calls/filter", async (req, res) => {
     const query = {};
 
     // Apply filters
-    if (brand && brand !== "all") query.brand = brand;
+    if (brand && brand !== "All") query.brand = brand;
     if (products) query.product = { $in: products.split(",") };
     if (pincodes) query.pincode = { $in: pincodes.split(",") };
     if (status !== undefined) query.status = status; // "" or any status
@@ -1380,7 +1380,7 @@ app.get("/api/calls/filter-count", async (req, res) => {
 
     const query = { status: "" }; // only unassigned calls
 
-    if (brand && brand !== "all") query.brand = brand;
+    if (brand && brand !== "All") query.brand = brand;
     if (products) query.product = { $in: products.split(",") };
     if (pincodes) query.pincode = { $in: pincodes.split(",") };
 
