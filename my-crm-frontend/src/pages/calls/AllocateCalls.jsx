@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function AllocatedCalls() {
+  const [brands, setBrands] = useState([]);
   const [brand, setBrand] = useState("all");
   const [products, setProducts] = useState([]);
   const [pincodes, setPincodes] = useState([]);
@@ -21,6 +22,21 @@ export default function AllocatedCalls() {
   const recordsPerPage = 5;
 
  
+  // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
+
 
   useEffect(() => {
     fetch("/api/technicians")  // adjust URL based on your backend setup
@@ -214,21 +230,23 @@ const fetchTechnicianCount = async (tech) => {
 
       {/* Filters */}
       <div className="flex items-start space-x-4 mb-4">
+    {/* Brand */}
         <div>
-          <label className="block text-sm font-medium mb-1">Brand</label>
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
           <select
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            className="border rounded p-2"
+            className="border rounded p-2 w-full"
           >
-            
-            <option value="all">All</option>
-            <option value="Havells">Havells</option>
-            <option value="Bajaj">Bajaj</option>
-            <option value="Usha">Usha</option>
-            <option value="Atomberg">Atomberg</option>
+            <option value="">Select Brand</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
           </select>
         </div>
+
 
         {/* Product Dropdown */}
         <div className="relative">
