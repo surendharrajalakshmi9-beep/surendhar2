@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function ManualCalls() {
+   const [brands, setBrands] = useState([]);
   const [form, setForm] = useState({
-    brand: "",
+    brands: "",
     callNo: "",
     phoneNo: "",
     customerName: "",
@@ -17,7 +18,7 @@ export default function ManualCalls() {
     callSubtype: "",
     natureOfComplaint: "" 
   });
-   const [brands, setBrands] = useState([]);
+  
 
 
   const handleChange = (e) => {
@@ -41,7 +42,7 @@ export default function ManualCalls() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.brand) return toast.error("Please select a brand");
+   
     if (!form.callNo || !form.phoneNo)
       return toast.error("Call No & Phone No are required");
     if (!form.callerType) return toast.error("Please select Caller Type");
@@ -58,7 +59,7 @@ export default function ManualCalls() {
       if (res.ok) {
         toast.success("Call Details Added Successfully");
         setForm({
-          brand: "",
+          brands: "",
           callNo: "",
           phoneNo: "",
           customerName: "",
