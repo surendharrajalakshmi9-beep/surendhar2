@@ -13,12 +13,12 @@ const Returnspare = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selected, setSelected] = useState([]);
   const [editQty, setEditQty] = useState({}); // store edited qty
-
+   const [brands, setBrands] = useState([]);
   const recordsPerPage = 5;
   const totalPages = Math.ceil(spares.length / recordsPerPage);
 
   const fetchSpares = async () => {
-     const [brands, setBrands] = useState([]);
+  
 
   // ✅ Fetch brands from backend
   useEffect(() => {
