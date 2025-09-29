@@ -7,10 +7,29 @@ import * as XLSX from "xlsx";
 const Reports = () => {
   const [searchParams] = useSearchParams();
   const [brand, setBrand] = useState(searchParams.get("brand") || "");
+   const [brands, setBrands] = useState([]);
   const [reportType, setReportType] = useState(searchParams.get("reportType") || "");
   const [spareCode, setSpareCode] = useState("");
   const [reportData, setReportData] = useState([]);
 
+
+   // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
+
+
+  
   const handleFetch = async () => {
     if (!brand || !reportType) {
       alert("Please select both brand and report type");
@@ -53,17 +72,22 @@ const Reports = () => {
 
       {/* Filters */}
       <div className="flex space-x-4 mb-4">
-        <select
-          className="border p-2 rounded"
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-        >
-          <option value="All">All</option>
-          <option value="Havells">Havells</option>
-          <option value="Bajaj">Bajaj</option>
-          <option value="Usha">Usha</option>
-          <option value="Atomberg">Atomberg</option>
-        </select>
+    {/* Brand */}
+      
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">All</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        
 
         <select
           className="border p-2 rounded"
