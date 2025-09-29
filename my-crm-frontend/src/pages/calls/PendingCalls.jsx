@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 export default function PendingCalls() {
+  const [brands, setBrands] = useState([]);
   const [brand, setBrand] = useState("");
   const [pendingWith, setPendingWith] = useState("All");
   const [calls, setCalls] = useState([]);
@@ -12,6 +13,24 @@ export default function PendingCalls() {
  // State
 const [spareCode, setSpareCode] = useState("");
 const [spareName, setSpareName] = useState("");
+
+
+
+  // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
+
 
 // Fetch item name when spareCode changes
 useEffect(() => {
@@ -134,17 +153,23 @@ useEffect(() => {
 
       {/* Filters */}
       <div className="mb-4 flex space-x-4">
-        <select
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option value="">All Brands</option>
-          <option value="Havells">Havells</option>
-          <option value="Bajaj">Bajaj</option>
-          <option value="Usha">Usha</option>
-          <option value="Atomberg">Atomberg</option>
-        </select>
+       
+{/* Brand */}
+        
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">Select Brand</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        
 
         <select
           value={pendingWith}
