@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 export default function ManualCalls() {
    const [brands, setBrands] = useState([]);
   const [form, setForm] = useState({
-    brands: "",
+    brand: "",
     callNo: "",
     phoneNo: "",
     customerName: "",
@@ -59,7 +59,7 @@ export default function ManualCalls() {
       if (res.ok) {
         toast.success("Call Details Added Successfully");
         setForm({
-          brands: "",
+          brand: "",
           callNo: "",
           phoneNo: "",
           customerName: "",
@@ -89,21 +89,22 @@ export default function ManualCalls() {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
        
 {/* Brand */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Select Brand</label>
-          <select
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            className="border rounded p-2 w-full"
-          >
-            <option value="">All</option>
-            {brands.map((b) => (
-              <option key={b._id} value={b.name}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
+<div>
+  <label className="block text-sm font-medium mb-1">Select Brand</label>
+  <select
+    name="brand" // ✅ so handleChange works
+    value={form.brand} // ✅ bind to form.brand
+    onChange={handleChange} // ✅ updates form state
+    className="border rounded p-2 w-full"
+  >
+    <option value="">All</option>
+    {brands.map((b) => (
+      <option key={b._id} value={b.name}>
+        {b.name}
+      </option>
+    ))}
+  </select>
+</div>
 
         {/* Call No */}
         <div>
