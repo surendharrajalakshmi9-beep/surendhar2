@@ -2,11 +2,28 @@ import React, { useState } from "react";
 
 function Cnupdate() {
   const [brand, setBrand] = useState("");
+  const [brands, setBrands] = useState([]);
   const [records, setRecords] = useState([]);
   const [selectedRecords, setSelectedRecords] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
 
+  // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
+
+  
  const fetchData = async () => {
   try {
     const res = await fetch(`/api/returnspares?brand=${brand}`);
@@ -74,18 +91,23 @@ function Cnupdate() {
       <h2 className="text-lg font-bold mb-4">Update CN</h2>
 
       <div className="flex items-center gap-3 mb-4">
-        <label>Select Brand:</label>
-        <select
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-          className="border p-2"
-        >
-          <option value="">--Select--</option>
-          <option value="Havells">Havells</option>
-          <option value="Bajaj">Bajaj</option>
-          <option value="Usha">Usha</option>
-          <option value="Atomberg">Atomberg</option>
-        </select>
+       
+{/* Brand */}
+        
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">All</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        
         <button
           onClick={fetchData}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
