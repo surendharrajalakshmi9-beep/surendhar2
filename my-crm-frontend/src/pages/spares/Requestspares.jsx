@@ -12,6 +12,22 @@ export default function Requestspares() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
+  const [brands, setBrands] = useState([]);
+
+  // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
 
   // Fetch spares list
   useEffect(() => {
@@ -108,19 +124,22 @@ const handleAllocate = async (callNo) => {
 
       {/* Brand Filter */}
       <div className="mb-4">
-        <label className="block mb-2 font-medium">Select Brand</label>
-        <select
-          value={brand}
-          onChange={(e) => { setBrand(e.target.value); setCurrentPage(1); }}
-          className="border p-2 rounded w-60"
-        >
-          <option value="">Select</option>
-          <option value="Havells">Havells</option>
-          <option value="Bajaj">Bajaj</option>
-          <option value="Usha">Usha</option>
-          <option value="Atomberg">Atomberg</option>
-        </select>
-      </div>
+       {/* Brand */}
+        
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">All</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </div>
 
       {/* Counts */}
       {brand && (
