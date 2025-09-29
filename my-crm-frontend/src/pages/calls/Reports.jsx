@@ -23,6 +23,7 @@ export default function Reports() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [technician, setTechnician] = useState("All");
+ const [brands, setBrands] = useState([]);
    const [brand, setBrand] = useState("All");
   const [pendingCategory, setPendingCategory] = useState("All");
   const [reportData, setReportData] = useState([]);
@@ -64,6 +65,21 @@ export default function Reports() {
       setLoading(false);
     }
   };
+// ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
+
 
 
   // 🔹 Fetch technicians from backend
@@ -128,19 +144,21 @@ export default function Reports() {
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
 
-<div>
-          <label className="block text-sm mb-1">Brand</label>
+
+{/* Brand */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
           <select
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
-            className="border p-2 rounded w-full"
+            className="border rounded p-2 w-full"
           >
-            <option value="All">All</option>
-            <option value="Havells">Havells</option>
-            <option value="Bajaj">Bajaj</option>
-            <option value="Usha">Usha</option>
-            <option value="Atomberg">Atomberg</option>
-           
+            <option value="">All</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
           </select>
         </div>
 
