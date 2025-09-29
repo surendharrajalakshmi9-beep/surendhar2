@@ -4,7 +4,7 @@ import Topbar from "../components/topbar";       // <-- your existing topbar
 import DashboardCards from "../components/dashboardcards"; // new cards component
 
 export default function Dashboard({ onLogout }) {
-  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [selectedBrand, setSelectedBrand] = useState("All");
 
   return (
     <div className="flex min-h-screen">
