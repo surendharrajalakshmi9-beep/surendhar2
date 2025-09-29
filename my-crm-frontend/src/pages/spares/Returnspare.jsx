@@ -18,7 +18,23 @@ const Returnspare = () => {
   const totalPages = Math.ceil(spares.length / recordsPerPage);
 
   const fetchSpares = async () => {
-   
+     const [brands, setBrands] = useState([]);
+
+  // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
+
 
     setLoading(true);
     try {
@@ -105,13 +121,23 @@ const Returnspare = () => {
 
       {/* Filters */}
       <div className="grid grid-cols-6 gap-4 mb-4">
-        <select value={brand} onChange={(e) => setBrand(e.target.value)} className="border p-2 rounded">
-          <option value="">Select Brand</option>
-          <option value="Havells">Havells</option>
-          <option value="Bajaj">Bajaj</option>
-          <option value="Usha">Usha</option>
-          <option value="Atomberg">Atomberg</option>
-        </select>
+       
+{/* Brand */}
+        
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">All</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        
 
         <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="border p-2 rounded" />
         <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="border p-2 rounded" />
