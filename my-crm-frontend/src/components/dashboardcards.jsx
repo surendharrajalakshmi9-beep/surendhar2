@@ -28,6 +28,23 @@ export default function DashboardCards() {
     spareRequests: 0,
     spareNotAllocated: 0,
   });
+ const [brands, setBrands] = useState([]);
+
+  // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
+
 
   // Fetch counts from backend based on brand
   useEffect(() => {
@@ -54,18 +71,23 @@ export default function DashboardCards() {
     <div>
       {/* 🔽 Brand Dropdown */}
       <div className="mb-6">
-        <label className="mr-2 font-semibold">Select Brand:</label>
-        <select
-          value={brand}
-          onChange={(e) => setBrand(e.target.value)}
-          className="border px-3 py-2 rounded"
-        >
-          <option value="All">All</option>
-          <option value="Havells">Havells</option>
-          <option value="Bajaj">Bajaj</option>
-          <option value="Usha">Usha</option>
-          <option value="Atomberg">Atomberg</option>
-        </select>
+  
+{/* Brand */}
+        
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">All</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        
       </div>
 
       {/* Cards */}
