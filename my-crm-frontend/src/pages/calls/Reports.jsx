@@ -69,7 +69,7 @@ export default function Reports() {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/brands");
+        const res = await fetch("/api/brands");
         const data = await res.json();
         if (res.ok) setBrands(data);
         else toast.error("Failed to fetch brands");
