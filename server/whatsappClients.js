@@ -85,7 +85,7 @@ export const brandTechnicianGroupMap = {
      "917871859695":"120363397809487001@g.us", //Ajith
      "917871859695":"120363401783442970@g.us", //Gnanavel
     "917871859695":"120363422922583327@g.us", //Vijay
-    
+       "917871859695":"120363399028512688@g.us", //Santhosh
     // Add more technicians for this brand here
   },
   "Bajaj - S.R Enterprises": {
@@ -105,6 +105,7 @@ export const brandTechnicianGroupMap = {
       "917871859695":"120363402603114268@g.us", //Gnanavel
        "917871859695":"120363348976551029@g.us", //Suresh
        "917871859695":"120363422922583327@g.us", //Vijay
+       "917871859695":"120363399028512688@g.us", //Santhosh
   },
 };
 // Map brand + technician phone → WhatsApp group ID
