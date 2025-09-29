@@ -21,19 +21,25 @@ const Returnspare = () => {
   
 
   // ✅ Fetch brands from backend
-  useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        const res = await fetch("/api/brands");
-        const data = await res.json();
-        if (res.ok) setBrands(data);
-        else toast.error("Failed to fetch brands");
-      } catch {
-        toast.error("Server error while fetching brands");
+  // For brands
+useEffect(() => {
+  const fetchBrands = async () => {
+    try {
+      const res = await fetch("/api/brands");
+      const data = await res.json();
+
+      if (res.ok) {
+        setBrands(Array.isArray(data) ? data : data.data || []); // <- handle both cases
+      } else {
+        toast.error("Failed to fetch brands");
       }
-    };
-    fetchBrands();
-  }, []);
+    } catch {
+      toast.error("Server error while fetching brands");
+    }
+  };
+  fetchBrands();
+}, []);
+
 
 
     setLoading(true);
@@ -42,7 +48,8 @@ const Returnspare = () => {
         params: { brand, fromDate, toDate, mslStatus, condition },
       });
 
-      setSpares(Array.isArray(res.data) ? res.data : []);
+      const sparesData = Array.isArray(res.data) ? res.data : res.data.data || [];
+setSpares(sparesData);
       setSelected([]);
       setEditQty({});
       setCurrentPage(1);
