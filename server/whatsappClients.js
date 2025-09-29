@@ -63,32 +63,49 @@ function createClient(clientId) {
   return client;
 }
 
+
 // ✅ One WhatsApp account → one client
 const client1 = createClient("client1");
 
-// ✅ Brand → Client mapping
+// ✅ Brand → Client mapping (must exactly match DB brand names)
 export const brandClientMap = {
-  Bajaj: client1,
-  Atomberg: client1,
-  Havells: client1,
-  Usha: client1,
+  "Bajaj - Surendhar Enterprises": client1,
+  "Bajaj - S.R Enterprises": client1,
+  "Atomberg": client1,
+  "Usha": client1,
 };
 
 // ✅ Brand + Technician → Group ID mapping
 export const brandTechnicianGroupMap = {
-  Bajaj: {
-   "917871859695": "120363401875907092@g.us",   // Surendhar - Bajaj group
-      // Chandru - Bajaj group
+  "Bajaj - Surendhar Enterprises": {
+     "917871869695":"120363404308952029@g.us", //Imtiyas
+     "917871859695":"120363420142240254@g.us", //Jeeva
+     "917871859695":"120363417772011497@g.us", //Agni
+     "917871859695":"120363405717911331@g.us", //Suresh
+     "917871859695":"120363397809487001@g.us", //Ajith
+     "917871859695":"120363401783442970@g.us", //Gnanavel
+    "917871859695":"120363422922583327@g.us", //Vijay
     
+    // Add more technicians for this brand here
   },
-  Atomberg: {
-   
+  "Bajaj - S.R Enterprises": {
+    "917871869695":"120363404308952029@g.us", //Imtiyas
+     "917871859695":"120363420142240254@g.us", //Jeeva
+     "917871859695":"120363401660649252@g.us", //Kamalnath
+    // Add technicians for S.R Enterprises here
   },
-  Havells: {
+  "Atomberg": {
+    "917871859695":"120363422922583327@g.us", //Vijay
     // Add technicians here
   },
-  Usha: {
-    // Add technicians here
+  "Usha": {
+    "917871859695": "120363296468631098@g.us",// Agni
+     "917871859695":"120363403554741254@g.us", //Ajith
+     "917871869695":"120363404308952029@g.us", //Imtiyas
+      "917871859695":"120363402603114268@g.us", //Gnanavel
+       "917871859695":"120363348976551029@g.us", //Suresh
+       "917871859695":"120363422922583327@g.us", //Vijay
   },
 };
 // Map brand + technician phone → WhatsApp group ID
+
