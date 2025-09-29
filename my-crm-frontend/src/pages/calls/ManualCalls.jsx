@@ -17,10 +17,26 @@ export default function ManualCalls() {
     callSubtype: "",
     natureOfComplaint: "" 
   });
+   const [brands, setBrands] = useState([]);
+
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+// ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,15 +86,21 @@ export default function ManualCalls() {
       <h2 className="text-xl font-semibold mb-4">Manual Call Loading</h2>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Brand */}
+       
+{/* Brand */}
         <div>
-          <label className="block text-sm font-medium">Brand</label>
-          <select name="brand" value={form.brand} onChange={handleChange} className="w-full border rounded p-2">
-            <option value="">Select Brand</option>
-            <option value="Havells">Havells</option>
-            <option value="Bajaj">Bajaj</option>
-            <option value="Usha">Usha</option>
-            <option value="Atomberg">Atomberg</option>
+          <label className="block text-sm font-medium mb-1">Select Brand</label>
+          <select
+            value={brand}
+            onChange={(e) => setBrand(e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">All</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
           </select>
         </div>
 
