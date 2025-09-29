@@ -48,8 +48,16 @@ useEffect(() => {
         params: { brand, fromDate, toDate, mslStatus, condition },
       });
 
-      const sparesData = Array.isArray(res.data) ? res.data : res.data.data || [];
-setSpares(sparesData);
+      console.log("API Response:", res.data); // 👈 check what comes back
+
+    // If API returns { data: [...] }
+    const sparesData = Array.isArray(res.data)
+      ? res.data
+      : Array.isArray(res.data.data)
+      ? res.data.data
+      : [];
+
+    setSpares(sparesData);
       setSelected([]);
       setEditQty({});
       setCurrentPage(1);
