@@ -4,7 +4,22 @@ import toast from "react-hot-toast";
 export default function UploadSBOM() {
   const [brand, setBrand] = useState("");
   const [file, setFile] = useState(null);
+const [brands, setBrands] = useState([]);
 
+  // ✅ Fetch brands from backend
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("/api/brands");
+        const data = await res.json();
+        if (res.ok) setBrands(data);
+        else toast.error("Failed to fetch brands");
+      } catch {
+        toast.error("Server error while fetching brands");
+      }
+    };
+    fetchBrands();
+  }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!brand) return toast.error("Please select a brand");
@@ -34,6 +49,8 @@ export default function UploadSBOM() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Brand */}
+       
+{/* Brand */}
         <div>
           <label className="block text-sm font-medium mb-1">Select Brand</label>
           <select
@@ -41,11 +58,12 @@ export default function UploadSBOM() {
             onChange={(e) => setBrand(e.target.value)}
             className="border rounded p-2 w-full"
           >
-            <option value="">Select Brand</option>
-            <option value="Havells">Havells</option>
-            <option value="Bajaj">Bajaj</option>
-            <option value="Usha">Usha</option>
-            <option value="Atomberg">Atomberg</option>
+            <option value="">All</option>
+            {brands.map((b) => (
+              <option key={b._id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
           </select>
         </div>
 
