@@ -1,7 +1,7 @@
 import { brandClientMap } from "./whatsappClients.js";
 import { brandTechnicianGroupMap } from "./whatsappClients.js";
 
-// 🔹 Helper: Ensure client is ready before sending
+// 🔹 Ensure client is ready before sending
 const ensureClientReady = async (client, brand) => {
   return new Promise((resolve, reject) => {
     if (!client) return reject(`❌ No client for brand ${brand}`);
@@ -23,23 +23,52 @@ const ensureClientReady = async (client, brand) => {
     setTimeout(() => reject(`⏳ Timeout waiting for client: ${brand}`), 20000); // 20s
   });
 };
+
+// 🔹 Format chat ID
+const formatChatId = (number) => {
+  if (!number) return null;
+  return `${number}@c.us`;
+};
+
+// 🔹 Send to technician personal chat OR group (with ensureClientReady)
+const sendToTechnicianOrGroup = async (client, brand, number, msg) => {
+  const technicianGroups = brandTechnicianGroupMap[brand];
+  if (!technicianGroups) {
+    console.error(`❌ No groups configured for brand ${brand}`);
+    return;
+  }
+
+  try {
+    // ✅ Ensure client is ready before sending
+    await ensureClientReady(client, brand);
+
+    const groupId = technicianGroups[number];
+
+    if (!groupId) {
+      const chatId = formatChatId(number);
+      if (!chatId) {
+        console.error(`❌ Invalid technician number: ${number}`);
+        return;
+      }
+      await client.sendMessage(chatId, msg.trim());
+      console.log(`📨 Sent message for technician ${number} (${brand}) → personal chat`);
+    } else {
+      await client.sendMessage(groupId, msg.trim());
+      console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
+    }
+  } catch (err) {
+    console.error(`❌ Failed to send message for ${number} (${brand}):`, err);
+  }
+};
+
+// 🔹 Send "Call Assigned" message
 export const sendCallAssignedMessage = async (brand, number, call) => {
   try {
     const client = brandClientMap[brand];
-    const technicianGroups = brandTechnicianGroupMap[brand];
-
     if (!client) {
       console.error(`❌ No WhatsApp client for brand ${brand}`);
       return;
     }
-
-    if (!technicianGroups) {
-      console.error(`❌ No groups configured for brand ${brand}`);
-      return;
-    }
-
-    const groupId = technicianGroups[number];
-
 
     let tatFormatted = "N/A";
     if (call.tat) {
@@ -68,38 +97,21 @@ export const sendCallAssignedMessage = async (brand, number, call) => {
 ⏰ Complete By: ${tatFormatted}  
 ---------------------------
     `;
- if (!groupId) {
-      await client.sendMessage(`${number}@c.us`,msg.trim());
-      console.log(`Sent message for technician ${number} (${brand}) → personal chat`);
-      return;
-    }
-    else{
-await client.sendMessage(groupId, msg.trim());
-    console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
-    }
+
+    await sendToTechnicianOrGroup(client, brand, number, msg);
   } catch (err) {
     console.error("❌ Error sending call assigned WhatsApp:", err);
   }
 };
 
-
+// 🔹 Send "Spare Allocated" message
 export const sendSpareAllocatedMessage = async (brand, number, call, spare) => {
   try {
     const client = brandClientMap[brand];
-   const technicianGroups = brandTechnicianGroupMap[brand];
-
     if (!client) {
       console.error(`❌ No WhatsApp client for brand ${brand}`);
       return;
     }
-
-    if (!technicianGroups) {
-      console.error(`❌ No groups configured for brand ${brand}`);
-      return;
-    }
-
-    const groupId = technicianGroups[number];
- 
 
     const msg = `
 🔧 *Spare Allocated*  
@@ -114,45 +126,22 @@ export const sendSpareAllocatedMessage = async (brand, number, call, spare) => {
 🔢 Quantity: ${call.qty || 1}  
 ---------------------------
     `;
-  if (!groupId) {
-      await client.sendMessage(`${number}@c.us`,msg.trim());
-      console.log(`Sent message for technician ${number} (${brand}) → personal chat`);
-      return;
-    }
-    else{
-await client.sendMessage(groupId, msg.trim());
-    console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
-    }
 
-  }catch (err) {
+    await sendToTechnicianOrGroup(client, brand, number, msg);
+  } catch (err) {
     console.error("❌ Error sending spare allocated WhatsApp:", err);
   }
 };
 
-
+// 🔹 Send "Transfer Call Assigned" message
 export const sendTransferCallAssignedMessage = async (brand, number, call) => {
   try {
     const client = brandClientMap[brand];
-    const technicianGroups = brandTechnicianGroupMap[brand];
-
     if (!client) {
       console.error(`❌ No WhatsApp client for brand ${brand}`);
       return;
     }
 
-    if (!technicianGroups) {
-      console.error(`❌ No groups configured for brand ${brand}`);
-      return;
-    }
-
-    const groupId = technicianGroups[number];
-    if (!groupId) {
-      console.error(`❌ No group configured for technician ${number} in brand ${brand}`);
-      return;
-    }
-
-
-    // Format TAT (reduce 1 hour)
     let tatFormatted = "N/A";
     if (call.tat) {
       const tatDate = new Date(call.tat);
@@ -168,7 +157,7 @@ export const sendTransferCallAssignedMessage = async (brand, number, call) => {
     }
 
     const msg = `
-📞 *New Call Transfered*  
+📞 *New Call Transferred*  
 ---------------------------  
 📌 Call No: ${call.callNo}  
 👤 Customer: ${call.name}  
@@ -179,21 +168,11 @@ export const sendTransferCallAssignedMessage = async (brand, number, call) => {
 ❗ Problem: ${call.natureOfComplaint || "N/A"}  
 ⏰ Complete By: ${tatFormatted}  
 ❗ Current Status: ${call.status || "N/A"} 
-
 ---------------------------
     `;
 
-     if (!groupId) {
-      await client.sendMessage(`${number}@c.us`,msg.trim());
-      console.log(`Sent message for technician ${number} (${brand}) → personal chat`);
-      return;
-    }
-    else{
-await client.sendMessage(groupId, msg.trim());
-    console.log(`📨 Sent message for technician ${number} (${brand}) → ${groupId}`);
-    }
-
+    await sendToTechnicianOrGroup(client, brand, number, msg);
   } catch (err) {
-    console.error("❌ Error sending call assigned WhatsApp:", err);
+    console.error("❌ Error sending transfer call WhatsApp:", err);
   }
 };
