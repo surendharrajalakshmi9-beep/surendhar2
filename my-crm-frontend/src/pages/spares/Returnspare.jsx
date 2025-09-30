@@ -136,7 +136,7 @@ useEffect(() => {
        
 {/* Brand */}
         
-          <label className="block text-sm font-medium mb-1">Select Brand</label>
+         
           <select
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
