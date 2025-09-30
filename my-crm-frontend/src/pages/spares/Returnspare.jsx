@@ -17,9 +17,6 @@ const Returnspare = () => {
   const recordsPerPage = 5;
   const totalPages = Math.ceil(spares.length / recordsPerPage);
 
-  const fetchSpares = async () => {
-  
-
   // ✅ Fetch brands from backend
   // For brands
 useEffect(() => {
@@ -40,9 +37,9 @@ useEffect(() => {
   fetchBrands();
 }, []);
 
-
-
-    setLoading(true);
+  
+  const fetchSpares = async () => {
+      setLoading(true);
     try {
       const res = await axios.get("/api/spares/return", {
         params: { brand, fromDate, toDate, mslStatus, condition },
