@@ -404,7 +404,7 @@ app.get("/api/technicians", async (req, res) => {
   try {
     // fetch only employees with emptype = "Technician"
     const technicians = await Employee.find(
-      { emptype: "Technician" },
+      { emptype: "Technician" , status: "Active"},
       "name"
     );
     
