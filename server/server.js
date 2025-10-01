@@ -160,10 +160,11 @@ app.get("/api/brands", async (req, res) => {
   }
 });
 
+
 // ✅ Resend WhatsApp only
 app.post("/api/calls/resend-assigned", async (req, res) => {
   try {
-    const { callNos, brand } = req.body;
+    const { callNos, brand, technician } = req.body;
 
     if (!brand) return res.status(400).json({ error: "Brand is required" });
     if (!Array.isArray(callNos) || callNos.length === 0)
@@ -171,16 +172,53 @@ app.post("/api/calls/resend-assigned", async (req, res) => {
 
     const calls = await CallDetail.find({ callNo: { $in: callNos } });
 
-    for (const call of calls) {
-      await sendCallAssignedMessage(brand, call.technician, call);
+     // ✅ Fetch technician details
+    const technician1 = await Employee.findOne({ name: technician });
+    if (!technician1) {
+      return res.status(404).json({ error: "Technician not found" });
     }
+console.log("brand:"+brand+"phone:"+technician1.phone);
 
-    res.json({ success: true, message: "WhatsApp resent successfully" });
-  } catch (err) {
-    console.error("❌ Error in /api/calls/resend-assigned:", err);
-    res.status(500).json({ error: "Server error" });
+    // ✅ Fetch only the updated call details
+    const updatedCalls = await CallDetail.find({ callNo: { $in: callNos } });
+
+   // ✅ Send WhatsApp for each call
+for (const call of updatedCalls) {
+  await sendCallAssignedMessage(
+    brand,
+    technician1.phone,
+    {
+      callNo: call.callNo,
+      name: call.customerName,
+      phone: call.phoneNo,
+      address: call.address,
+      pincode: call.pincode,
+      model: call.model,
+      product: call.product,
+      callSubtype: call.callSubtype,
+      natureOfComplaint: call.natureOfComplaint,
+      tat: call.tat, // keep TAT
+    },
+    
+  );
+
+}
+    res.json({ message: "messages re-sent successfully" });
+
+  } catch (error) {
+    console.error("Error assigning technician:", error);
+    res.status(500).json({ error: "Failed to assign technician" });
   }
 });
+app.get("/api/calls", async (req, res) => {
+  try {
+    const calls = await CallDetail.find().sort({ _id: -1 });
+    res.json(calls);
+  } catch (error) {
+    res.status(500).send({ error: "Failed to fetch calls" });
+  }
+});
+
 
 
 // Filter assigned calls
