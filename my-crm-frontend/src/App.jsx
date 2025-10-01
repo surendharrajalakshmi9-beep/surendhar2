@@ -17,6 +17,7 @@ import UploadSBOM from "./pages/spares/UploadSBOM";
 import Incomingspares from "./pages/spares/Incomingspares.jsx";
 import Cnupdate from "./pages/spares/Cnupdate.jsx";
 import Reports1 from "./pages/spares/Reports.jsx";
+import ResendAssignedCalls from "./pages/calls/resend";
 import Requestspares from "./pages/spares/Requestspares.jsx";
 import Returnspare from "./pages/spares/Returnspare.jsx";
 
@@ -46,6 +47,7 @@ const [data, setData] = useState(null);
         <Route path="pending" element={<PendingCalls />} />
         <Route path="transfer" element={<TransferCalls />} />
         <Route path="searchcalls" element={<SearchCalls />} />
+        <Route path="resend" element={<ResendAssignedCalls />} />
          <Route path="reports" element={<Reports />} />
          
       </Route>
