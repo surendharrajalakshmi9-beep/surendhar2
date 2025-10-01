@@ -88,7 +88,7 @@ const ResendAssignedCalls = () => {
       const res = await fetch("/api/calls/resend-assigned", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ callNos: selectedCalls, brand }),
+        body: JSON.stringify({ callNos: selectedCalls, brand, technician }),
       });
 
       if (res.ok) {
@@ -217,4 +217,5 @@ const ResendAssignedCalls = () => {
 };
 
 export default ResendAssignedCalls;
+
 
