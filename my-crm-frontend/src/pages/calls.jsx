@@ -28,6 +28,9 @@ export default function Calls() {
          <NavLink to="searchcalls" className={linkClass}>
           Search Calls
         </NavLink>
+        <NavLink to="resend" className={linkClass}>
+          Resend WhatsApp
+        </NavLink>
        
          <NavLink to="reports" className={linkClass}>
           Reports
