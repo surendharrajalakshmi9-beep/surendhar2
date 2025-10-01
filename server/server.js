@@ -160,6 +160,57 @@ app.get("/api/brands", async (req, res) => {
   }
 });
 
+// ✅ Resend WhatsApp only
+app.post("/api/calls/resend-assigned", async (req, res) => {
+  try {
+    const { callNos, brand } = req.body;
+
+    if (!brand) return res.status(400).json({ error: "Brand is required" });
+    if (!Array.isArray(callNos) || callNos.length === 0)
+      return res.status(400).json({ error: "No calls selected" });
+
+    const calls = await CallDetail.find({ callNo: { $in: callNos } });
+
+    for (const call of calls) {
+      await sendCallAssignedMessage(brand, call.technician, call);
+    }
+
+    res.json({ success: true, message: "WhatsApp resent successfully" });
+  } catch (err) {
+    console.error("❌ Error in /api/calls/resend-assigned:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+// Filter assigned calls
+app.get("/api/calls/filter-assigned", async (req, res) => {
+  try {
+    const { brand, technician, assignedDate } = req.query;
+
+    const query = { status: "pending" }; // only assigned calls
+
+    if (brand) query.brand = brand;
+    if (technician) query.technician = technician;
+    if (assignedDate) {
+      const start = new Date(assignedDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(assignedDate);
+      end.setHours(23, 59, 59, 999);
+      query.assignedDate = { $gte: start, $lte: end };
+    }
+
+    const calls = await CallDetail.find(query).sort({ assignedDate: -1 });
+
+    res.json({ calls });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
 app.get("/api/calls", async (req, res) => {
   try {
     const calls = await CallDetail.find().sort({ _id: -1 });
