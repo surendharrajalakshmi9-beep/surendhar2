@@ -16,7 +16,7 @@ const ResendAssignedCalls = () => {
   useEffect(() => {
     const fetchBrands = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/brands");
+        const res = await fetch("/api/brands");
         const data = await res.json();
         setBrands(data);
       } catch (err) {
@@ -30,7 +30,7 @@ const ResendAssignedCalls = () => {
   useEffect(() => {
     const fetchTechnicians = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/technicians");
+        const res = await fetch("/api/technicians");
         const data = await res.json();
         setTechnicians(data);
       } catch {
@@ -49,7 +49,7 @@ const ResendAssignedCalls = () => {
       if (assignedDate) params.append("assignedDate", assignedDate);
 
       const res = await fetch(
-        `http://localhost:5000/api/calls/filter-assigned?${params.toString()}`
+        `/api/calls/filter-assigned?${params.toString()}`
       );
       const data = await res.json();
       setCalls(data.calls || []);
@@ -85,7 +85,7 @@ const ResendAssignedCalls = () => {
     if (selectedCalls.length === 0) return toast.error("Select at least one call");
 
     try {
-      const res = await fetch("http://localhost:5000/api/calls/resend-assigned", {
+      const res = await fetch("/api/calls/resend-assigned", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ callNos: selectedCalls, brand }),
@@ -217,3 +217,4 @@ const ResendAssignedCalls = () => {
 };
 
 export default ResendAssignedCalls;
+
