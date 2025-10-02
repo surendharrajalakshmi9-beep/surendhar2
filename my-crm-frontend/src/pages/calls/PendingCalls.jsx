@@ -67,7 +67,7 @@ export default function PendingCalls() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
-  const currentRecords = calls.slice(indexOfFirstRecord, indexOfLastRecord);
+
 
   // ✅ Fetch pending calls
   const fetchCalls = async () => {
@@ -126,6 +126,11 @@ export default function PendingCalls() {
   }, [brand, technician, pendingWith]);  // ✅ include technician
 
   // rest of your code unchanged (checkbox, status update, table rendering...)
+    // Pagination logic
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = calls.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(calls.length / recordsPerPage);
 
   return (
     <div className="p-6 bg-[#f4f7fb] min-h-screen font-[Times_New_Roman] text-sm">
