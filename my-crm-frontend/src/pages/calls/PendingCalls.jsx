@@ -4,8 +4,8 @@ import toast from "react-hot-toast";
 export default function PendingCalls() {
   const [brands, setBrands] = useState([]);
   const [brand, setBrand] = useState("");
-  const [technicians, setTechnicians] = useState([]);   // ✅ store technicians
-  const [technician, setTechnician] = useState("");     // ✅ selected technician
+  const [technicians, setTechnicians] = useState([]);
+  const [technician, setTechnician] = useState("");
   const [pendingWith, setPendingWith] = useState("All");
   const [calls, setCalls] = useState([]);
   const [selectedCalls, setSelectedCalls] = useState([]);
@@ -16,7 +16,11 @@ export default function PendingCalls() {
   const [spareCode, setSpareCode] = useState("");
   const [spareName, setSpareName] = useState("");
 
-  // ✅ Fetch brands
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 5;
+
+  // Fetch brands
   useEffect(() => {
     const fetchBrands = async () => {
       try {
@@ -31,7 +35,7 @@ export default function PendingCalls() {
     fetchBrands();
   }, []);
 
-  // ✅ Fetch technicians
+  // Fetch technicians
   useEffect(() => {
     const fetchTechnicians = async () => {
       try {
@@ -46,7 +50,7 @@ export default function PendingCalls() {
     fetchTechnicians();
   }, []);
 
-  // ✅ Fetch spare name when spareCode changes
+  // Fetch spare name
   useEffect(() => {
     if (spareCode.trim() !== "") {
       fetch(`/api/items/${spareCode}`)
@@ -64,15 +68,43 @@ export default function PendingCalls() {
     }
   }, [spareCode]);
 
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 5;
-const handleStatusChange = (e) => {
-  setStatus(e.target.value);
-  setExtraFields({}); // reset extra fields whenever status changes
-};
+  const handleStatusChange = (e) => {
+    setStatus(e.target.value);
+    setExtraFields({});
+  };
 
-  // ✅ Fetch pending calls
+  const handleCheckbox = (callNo) => {
+    setSelectedCalls((prev) =>
+      prev.includes(callNo)
+        ? prev.filter((c) => c !== callNo)
+        : [...prev, callNo]
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (!status) return toast.error("Select status");
+    if (selectedCalls.length === 0) return toast.error("Select calls");
+
+    const payload = { callNos: selectedCalls, status, extra: extraFields };
+
+    try {
+      const res = await fetch("/api/calls/updateStatus", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        toast.success("Status updated successfully");
+        fetchCalls();
+        setStatus("");
+        setExtraFields({});
+      } else toast.error("Failed to update");
+    } catch {
+      toast.error("Server error");
+    }
+  };
+
+  // Fetch pending calls
   const fetchCalls = async () => {
     try {
       const params = new URLSearchParams();
@@ -126,10 +158,9 @@ const handleStatusChange = (e) => {
   useEffect(() => {
     fetchCalls();
     fetchPendingCount();
-  }, [brand, technician, pendingWith]);  // ✅ include technician
+  }, [brand, technician, pendingWith]);
 
-  // rest of your code unchanged (checkbox, status update, table rendering...)
-    // Pagination logic
+  // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = calls.slice(indexOfFirstRecord, indexOfLastRecord);
@@ -152,9 +183,7 @@ const handleStatusChange = (e) => {
           >
             <option value="">All Brands</option>
             {brands.map((b) => (
-              <option key={b._id} value={b.name}>
-                {b.name}
-              </option>
+              <option key={b._id} value={b.name}>{b.name}</option>
             ))}
           </select>
         </div>
@@ -169,9 +198,7 @@ const handleStatusChange = (e) => {
           >
             <option value="">All Technicians</option>
             {technicians.map((t) => (
-              <option key={t._id} value={t.name}>
-                {t.name} 
-              </option>
+              <option key={t._id} value={t.name}>{t.name}</option>
             ))}
           </select>
         </div>
@@ -205,56 +232,55 @@ const handleStatusChange = (e) => {
         Pending Calls: <span className="text-red-600">{pendingCount}</span>
       </p>
 
-      {/* Table with scroll */}
+      {/* Table */}
       <div className="overflow-y-auto max-h-64 border border-gray-300 rounded">
         {currentRecords.length > 0 ? (
-         <div className="max-h-[500px] overflow-auto border rounded-md shadow-md">
-  <div className="min-w-full overflow-x-auto">
-    <table className="table-auto border-collapse border border-gray-300 text-sm min-w-[1200px]">
-      <thead className="bg-gray-200 sticky top-0 z-10">
-        <tr>
-          <th className="border p-2">Select</th>
-          <th className="border p-2">Call No</th>
-          <th className="border p-2">Brand</th>
-          <th className="border p-2">Customer</th>
-          <th className="border p-2">Phone</th>
-          <th className="border p-2 min-w-[250px]">Address</th>
-          <th className="border p-2">Pincode</th>
-          <th className="border p-2">Type</th>
-          <th className="border p-2">Product</th>
-          <th className="border p-2">Model</th>
-          <th className="border p-2">Technician</th>
-          <th className="border p-2">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {currentRecords.map((call) => (
-          <tr key={call._id}>
-            <td className="border p-2 text-center">
-              <input
-                type="checkbox"
-                checked={selectedCalls.includes(call.callNo)}
-                onChange={() => handleCheckbox(call.callNo)}
-              />
-            </td>
-            <td className="border p-2">{call.callNo}</td>
-            <td className="border p-2">{call.brand}</td>
-            <td className="border p-2">{call.customerName}</td>
-            <td className="border p-2">{call.phoneNo}</td>
-            <td className="border p-2 min-w-[250px]">{call.address}</td>
-            <td className="border p-2">{call.pincode}</td>
-            <td className="border p-2">{call.type}</td>
-            <td className="border p-2">{call.product}</td>
-            <td className="border p-2">{call.model}</td>
-            <td className="border p-2">{call.technician || "-"}</td>
-            <td className="border p-2">{call.status}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
-
+          <div className="max-h-[500px] overflow-auto border rounded-md shadow-md">
+            <div className="min-w-full overflow-x-auto">
+              <table className="table-auto border-collapse border border-gray-300 text-sm min-w-[1200px]">
+                <thead className="bg-gray-200 sticky top-0 z-10">
+                  <tr>
+                    <th className="border p-2">Select</th>
+                    <th className="border p-2">Call No</th>
+                    <th className="border p-2">Brand</th>
+                    <th className="border p-2">Customer</th>
+                    <th className="border p-2">Phone</th>
+                    <th className="border p-2 min-w-[250px]">Address</th>
+                    <th className="border p-2">Pincode</th>
+                    <th className="border p-2">Type</th>
+                    <th className="border p-2">Product</th>
+                    <th className="border p-2">Model</th>
+                    <th className="border p-2">Technician</th>
+                    <th className="border p-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentRecords.map((call) => (
+                    <tr key={call._id}>
+                      <td className="border p-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedCalls.includes(call.callNo)}
+                          onChange={() => handleCheckbox(call.callNo)}
+                        />
+                      </td>
+                      <td className="border p-2">{call.callNo}</td>
+                      <td className="border p-2">{call.brand}</td>
+                      <td className="border p-2">{call.customerName}</td>
+                      <td className="border p-2">{call.phoneNo}</td>
+                      <td className="border p-2 min-w-[250px]">{call.address}</td>
+                      <td className="border p-2">{call.pincode}</td>
+                      <td className="border p-2">{call.type}</td>
+                      <td className="border p-2">{call.product}</td>
+                      <td className="border p-2">{call.model}</td>
+                      <td className="border p-2">{call.technician || "-"}</td>
+                      <td className="border p-2">{call.status}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
           <p className="p-4">No pending calls found</p>
         )}
@@ -299,6 +325,7 @@ const handleStatusChange = (e) => {
           </select>
         </div>
 
+        {/* Extra fields */}
         {status === "completed" && (
           <input
             type="datetime-local"
@@ -324,37 +351,35 @@ const handleStatusChange = (e) => {
             onChange={(e) => setExtraFields({ reason: e.target.value })}
           />
         )}
-       {status === "spare pending" && (
-  <div className="space-y-2">
-    <input
-      type="text"
-      placeholder="Spare Code"
-      className="border p-2 rounded w-full"
-      value={spareCode}
-      onChange={(e) => {
-        setSpareCode(e.target.value);
-        setExtraFields({ ...extraFields, spareCode: e.target.value });
-      }}
-    />
-    <input
-      type="text"
-      placeholder="Spare Name"
-      className="border p-2 rounded w-full bg-gray-100"
-      value={spareName}
-      readOnly
-    />
-    <input
-      type="number"
-      placeholder="Quantity"
-      className="border p-2 rounded w-full"
-      onChange={(e) =>
-        setExtraFields({ ...extraFields, qty: e.target.value })
-      }
-    />
-  </div>
-)}
-
-       
+        {status === "spare pending" && (
+          <div className="space-y-2">
+            <input
+              type="text"
+              placeholder="Spare Code"
+              className="border p-2 rounded w-full"
+              value={spareCode}
+              onChange={(e) => {
+                setSpareCode(e.target.value);
+                setExtraFields({ ...extraFields, spareCode: e.target.value });
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Spare Name"
+              className="border p-2 rounded w-full bg-gray-100"
+              value={spareName}
+              readOnly
+            />
+            <input
+              type="number"
+              placeholder="Quantity"
+              className="border p-2 rounded w-full"
+              onChange={(e) =>
+                setExtraFields({ ...extraFields, qty: e.target.value })
+              }
+            />
+          </div>
+        )}
         {(status === "spare allocated" || status === "replacement done") && (
           <>
             <select
@@ -389,10 +414,7 @@ const handleStatusChange = (e) => {
                 placeholder="Amount Received from Customer"
                 className="border p-2 rounded w-full"
                 onChange={(e) =>
-                  setExtraFields({
-                    ...extraFields,
-                    amountReceived: e.target.value,
-                  })
+                  setExtraFields({ ...extraFields, amountReceived: e.target.value })
                 }
               />
             )}
