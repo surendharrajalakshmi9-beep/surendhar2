@@ -67,6 +67,7 @@ export default function PendingCalls() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
+  const currentRecords = calls.slice(indexOfFirstRecord, indexOfLastRecord);
 
   // ✅ Fetch pending calls
   const fetchCalls = async () => {
