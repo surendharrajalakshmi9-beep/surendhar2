@@ -67,7 +67,10 @@ export default function PendingCalls() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
-
+const handleStatusChange = (e) => {
+  setStatus(e.target.value);
+  setExtraFields({}); // reset extra fields whenever status changes
+};
 
   // ✅ Fetch pending calls
   const fetchCalls = async () => {
