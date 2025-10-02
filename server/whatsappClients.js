@@ -1,5 +1,6 @@
 // server/whatsappClients.js
 import pkg from "whatsapp-web.js";
+import puppeteer from "puppeteer";  // ✅ use full puppeteer
 import qrcode from "qrcode-terminal";
 import mongoose from "mongoose";
 import { MongoStore } from "wwebjs-mongo";
@@ -22,7 +23,8 @@ function createClient(clientId) {
       store,
       backupSyncIntervalMs: 300000, // optional
     }),
-    puppeteer: {
+  puppeteer: {
+      executablePath: puppeteer.executablePath(),  // ✅ ensures Chromium is found
       headless: true,
       args: [
         "--no-sandbox",
