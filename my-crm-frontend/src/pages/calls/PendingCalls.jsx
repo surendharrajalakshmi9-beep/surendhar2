@@ -181,7 +181,7 @@ export default function PendingCalls() {
             onChange={(e) => setBrand(e.target.value)}
             className="border rounded p-2 w-full"
           >
-            <option value="">All Brands</option>
+            <option value="">All</option>
             {brands.map((b) => (
               <option key={b._id} value={b.name}>{b.name}</option>
             ))}
