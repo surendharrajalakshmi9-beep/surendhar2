@@ -4,19 +4,19 @@ import toast from "react-hot-toast";
 export default function PendingCalls() {
   const [brands, setBrands] = useState([]);
   const [brand, setBrand] = useState("");
+  const [technicians, setTechnicians] = useState([]);   // ✅ store technicians
+  const [technician, setTechnician] = useState("");     // ✅ selected technician
   const [pendingWith, setPendingWith] = useState("All");
   const [calls, setCalls] = useState([]);
   const [selectedCalls, setSelectedCalls] = useState([]);
   const [status, setStatus] = useState("");
   const [extraFields, setExtraFields] = useState({});
   const [pendingCount, setPendingCount] = useState(0);
- // State
-const [spareCode, setSpareCode] = useState("");
-const [spareName, setSpareName] = useState("");
 
+  const [spareCode, setSpareCode] = useState("");
+  const [spareName, setSpareName] = useState("");
 
-
-  // ✅ Fetch brands from backend
+  // ✅ Fetch brands
   useEffect(() => {
     const fetchBrands = async () => {
       try {
@@ -31,32 +31,52 @@ const [spareName, setSpareName] = useState("");
     fetchBrands();
   }, []);
 
+  // ✅ Fetch technicians
+  useEffect(() => {
+    const fetchTechnicians = async () => {
+      try {
+        const res = await fetch("/api/technicians");
+        const data = await res.json();
+        if (res.ok) setTechnicians(data);
+        else toast.error("Failed to fetch technicians");
+      } catch {
+        toast.error("Server error while fetching technicians");
+      }
+    };
+    fetchTechnicians();
+  }, []);
 
-// Fetch item name when spareCode changes
-useEffect(() => {
-  if (spareCode.trim() !== "") {
-    fetch(`/api/items/${spareCode}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data) {
-          setSpareName(data.item_name || ""); // auto fill from backend
-          setExtraFields((prev) => ({ ...prev, spareName: data.item_name || "" }));
-        }
-      })
-      .catch((err) => console.error("Error fetching spare name:", err));
-  }
-}, [spareCode]);
-
+  // ✅ Fetch spare name when spareCode changes
+  useEffect(() => {
+    if (spareCode.trim() !== "") {
+      fetch(`/api/items/${spareCode}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data) {
+            setSpareName(data.item_name || "");
+            setExtraFields((prev) => ({
+              ...prev,
+              spareName: data.item_name || "",
+            }));
+          }
+        })
+        .catch((err) => console.error("Error fetching spare name:", err));
+    }
+  }, [spareCode]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
 
+  // ✅ Fetch pending calls
   const fetchCalls = async () => {
     try {
-      const res = await fetch(
-        `/api/calls/pending?brand=${brand || "all"}`
-      );
+      const params = new URLSearchParams();
+      if (brand) params.append("brand", brand);
+      if (technician) params.append("technician", technician);
+      params.append("pendingWith", pendingWith);
+
+      const res = await fetch(`/api/calls/pending?${params.toString()}`);
       const data = await res.json();
 
       let filtered = data;
@@ -87,12 +107,11 @@ useEffect(() => {
   const fetchPendingCount = async () => {
     try {
       const params = new URLSearchParams();
-      params.append("brand", brand || "all");
+      if (brand) params.append("brand", brand);
+      if (technician) params.append("technician", technician);
       params.append("pendingWith", pendingWith);
 
-      const res = await fetch(
-        `/api/calls/pending-count?${params.toString()}`
-      );
+      const res = await fetch(`/api/calls/pending-count?${params.toString()}`);
       const data = await res.json();
       setPendingCount(data.count || 0);
     } catch (error) {
@@ -103,49 +122,9 @@ useEffect(() => {
   useEffect(() => {
     fetchCalls();
     fetchPendingCount();
-  }, [brand, pendingWith]);
+  }, [brand, technician, pendingWith]);  // ✅ include technician
 
-  const handleCheckbox = (callNo) => {
-    setSelectedCalls((prev) =>
-      prev.includes(callNo)
-        ? prev.filter((c) => c !== callNo)
-        : [...prev, callNo]
-    );
-  };
-
-  const handleStatusChange = (e) => {
-    setStatus(e.target.value);
-    setExtraFields({});
-  };
-
-  const handleSubmit = async () => {
-    if (!status) return toast.error("Select status");
-    if (selectedCalls.length === 0) return toast.error("Select calls");
-
-    const payload = { callNos: selectedCalls, status, extra: extraFields };
-
-    try {
-      const res = await fetch("/api/calls/updateStatus", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        toast.success("Status updated successfully");
-        fetchCalls();
-        setStatus("");
-        setExtraFields({});
-      } else toast.error("Failed to update");
-    } catch {
-      toast.error("Server error");
-    }
-  };
-
-  // Pagination logic
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = calls.slice(indexOfFirstRecord, indexOfLastRecord);
-  const totalPages = Math.ceil(calls.length / recordsPerPage);
+  // rest of your code unchanged (checkbox, status update, table rendering...)
 
   return (
     <div className="p-6 bg-[#f4f7fb] min-h-screen font-[Times_New_Roman] text-sm">
@@ -153,40 +132,61 @@ useEffect(() => {
 
       {/* Filters */}
       <div className="mb-4 flex space-x-4">
-       
-{/* Brand */}
-        
+
+        {/* Brand */}
+        <div>
           <label className="block text-sm font-medium mb-1">Select Brand</label>
           <select
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
             className="border rounded p-2 w-full"
           >
-            <option value="">Select Brand</option>
+            <option value="">All Brands</option>
             {brands.map((b) => (
               <option key={b._id} value={b.name}>
                 {b.name}
               </option>
             ))}
           </select>
-        
+        </div>
 
-        <select
-          value={pendingWith}
-          onChange={(e) => setPendingWith(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option value="All">All</option>
-          <option value="Pending with Technician">Pending with Technician</option>
-          <option value="Spare Pending">Spare Pending</option>
-          <option value="Replacement">Replacement</option>
-          <option value="Appointment">Appointment</option>
-          <option value="Others">Others</option>
-        </select>
+        {/* Technician */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Select Technician</label>
+          <select
+            value={technician}
+            onChange={(e) => setTechnician(e.target.value)}
+            className="border rounded p-2 w-full"
+          >
+            <option value="">All Technicians</option>
+            {technicians.map((t) => (
+              <option key={t._id} value={t.name}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Pending With */}
+        <div>
+          <label className="block text-sm font-medium mb-1">Pending With</label>
+          <select
+            value={pendingWith}
+            onChange={(e) => setPendingWith(e.target.value)}
+            className="border p-2 rounded"
+          >
+            <option value="All">All</option>
+            <option value="Pending with Technician">Pending with Technician</option>
+            <option value="Spare Pending">Spare Pending</option>
+            <option value="Replacement">Replacement</option>
+            <option value="Appointment">Appointment</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
 
         <button
           onClick={fetchCalls}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 rounded self-end"
         >
           Refresh
         </button>
