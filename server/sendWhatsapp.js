@@ -94,7 +94,7 @@ export const sendCallAssignedMessage = async (brand, number, call) => {
 🛠 Product: ${call.product}, ${call.model}  
 ⚡ Call Type: ${call.callSubtype}  
 ❗ Problem: ${call.natureOfComplaint || "N/A"}  
-⏰ Complete By: ${tatFormatted}  
+
 ---------------------------
     `;
 
@@ -155,7 +155,7 @@ export const sendTransferCallAssignedMessage = async (brand, number, call) => {
         hour12: true,
       });
     }
-
+//⏰ Complete By: ${tatFormatted}  
     const msg = `
 📞 *New Call Transferred*  
 ---------------------------  
@@ -166,7 +166,6 @@ export const sendTransferCallAssignedMessage = async (brand, number, call) => {
 🛠 Product: ${call.product}, ${call.model}  
 ⚡ Call Type: ${call.callSubtype}  
 ❗ Problem: ${call.natureOfComplaint || "N/A"}  
-⏰ Complete By: ${tatFormatted}  
 ❗ Current Status: ${call.status || "N/A"} 
 ---------------------------
     `;
