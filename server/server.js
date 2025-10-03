@@ -474,7 +474,9 @@ app.get("/api/spares/return", async (req, res) => {
     let spares = [];
 
     if (condition === "good") {
-      let query = {};
+      let query = {
+    status: { $ne: "Return Initiated" }, // ✅ exclude returned spares
+  };
       if (fromDate && toDate) {
         query.datespare = {
           $gte: new Date(fromDate),
