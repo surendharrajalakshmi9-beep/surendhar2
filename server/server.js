@@ -183,27 +183,6 @@ console.log("brand:"+brand+"phone:"+technician1.phone);
     // ✅ Fetch only the updated call details
     const updatedCalls = await CallDetail.find({ callNo: { $in: callNos } });
 
-   // ✅ Send WhatsApp for each call
-for (const call of updatedCalls) {
-  await sendCallAssignedMessage(
-    brand,
-    technician1.phone,
-    {
-      callNo: call.callNo,
-      name: call.customerName,
-      phone: call.phoneNo,
-      address: call.address,
-      pincode: call.pincode,
-      model: call.model,
-      product: call.product,
-      callSubtype: call.callSubtype,
-      natureOfComplaint: call.natureOfComplaint,
-      tat: call.tat, // keep TAT
-    },
-    
-  );
-
-}
     res.json({ message: "messages re-sent successfully" });
 
   } catch (error) {
@@ -383,30 +362,7 @@ app.post("/api/allocate/:callNo", async (req, res) => {
         return res.status(404).json({ error: "Technician not found" });
       }
 
-   // Send WhatsApp to technician
- await sendSpareAllocatedMessage(
-      callDetail.brand,   // ✅ correct brand
-      technician.phone,   // ✅ number
-      {
-        callNo: callDetail.callNo,
-        name: callDetail.customerName,
-        phone: callDetail.phoneNo,
-        address: callDetail.address,
-        pincode: callDetail.pincode,
-        model: callDetail.model,
-        product: callDetail.product,
-        callSubtype: callDetail.callSubtype,
-        natureOfComplaint: callDetail.natureOfComplaint,
-        
-      },
-      {
-        itemNo: spare.itemNo,
-        itemName: spare.itemName,
-        quantity: spare.quantity || 0
-      }
-    );
-
-      res.json({ success: true, message: "Spare allocated & WhatsApp sent" });
+      res.json({ success: true, message: "Spare allocated " });
     } else {
      // ❌ Not enough quantity available
       return res.status(400).json({
@@ -1638,30 +1594,8 @@ app.put("/api/calls/transfer", async (req, res) => {
        // ✅ Fetch only the updated call details
     const updatedCalls = await CallDetail.find({ callNo: { $in: callNos } });
 
-for (const call of updatedCalls) {
-      console.log(`📞 Transferring Call ${call.callNo} (${call.brand}) → ${technician1.phone}`);
 
-      // Send WhatsApp notification
-      await sendTransferCallAssignedMessage(
-        call.brand,              // brand is now taken from each call
-        technician1.phone,       // technician’s WhatsApp number
-        {
-          callNo: call.callNo,
-          name: call.customerName,
-          phone: call.phoneNo,
-          address: call.address,
-          pincode: call.pincode,
-          model: call.model,
-          product: call.product,
-          callSubtype: call.callSubtype,
-          natureOfComplaint: call.natureOfComplaint,
-          tat: call.tat,
-          status: call.status,
-        }
-      );
-    }
-
-    res.json({ message: "✅ Calls transferred and WhatsApp messages sent" });
+    res.json({ message: "✅ Calls transferred" });
 
   } catch (error) {
     console.error("❌ Error transferring technician:", error);
@@ -1725,28 +1659,7 @@ console.log("brand:"+brand+"phone:"+technician1.phone);
     // ✅ Fetch only the updated call details
     const updatedCalls = await CallDetail.find({ callNo: { $in: callNos } });
 
-   // ✅ Send WhatsApp for each call
-for (const call of updatedCalls) {
-  await sendCallAssignedMessage(
-    brand,
-    technician1.phone,
-    {
-      callNo: call.callNo,
-      name: call.customerName,
-      phone: call.phoneNo,
-      address: call.address,
-      pincode: call.pincode,
-      model: call.model,
-      product: call.product,
-      callSubtype: call.callSubtype,
-      natureOfComplaint: call.natureOfComplaint,
-      tat: call.tat, // keep TAT
-    },
-    
-  );
-
-}
-    res.json({ message: "Technician assigned and messages sent successfully" });
+    res.json({ message: "Technician assigned successfully" });
 
   } catch (error) {
     console.error("Error assigning technician:", error);
