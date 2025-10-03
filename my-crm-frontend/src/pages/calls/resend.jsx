@@ -155,38 +155,53 @@ const ResendAssignedCalls = () => {
         {currentRecords.length > 0 ? (
           <table className="min-w-[800px] w-full table-auto border-collapse text-sm">
             <thead className="bg-gray-200">
-              <tr>
-                <th className="border p-2">Select</th>
-                <th className="border p-2">Call No</th>
-                <th className="border p-2">Customer</th>
-                <th className="border p-2">Technician</th>
-                <th className="border p-2">Product</th>
-                <th className="border p-2">Model</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentRecords.map((call) => (
-                <tr key={call.callNo}>
-                  <td className="border p-2 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedCalls.includes(call.callNo)}
-                      onChange={() => handleCheckbox(call.callNo)}
-                    />
-                  </td>
-                  <td className="border p-2">{call.callNo}</td>
-                  <td className="border p-2">{call.customerName}</td>
-                  <td className="border p-2">{call.technician}</td>
-                  <td className="border p-2">{call.product}</td>
-                  <td className="border p-2">{call.model}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="p-4">No calls found</p>
-        )}
-      </div>
+               <tr>
+          <th className="border p-2">Select</th>
+          <th className="border p-2">Call No</th>
+          <th className="border p-2">Customer</th>
+          <th className="border p-2">Technician</th>
+          <th className="border p-2">Product</th>
+          <th className="border p-2">Model</th>
+          <th className="border p-2">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {currentRecords.map((call) => (
+          <tr key={call.callNo}>
+            <td className="border p-2 text-center">
+              <input
+                type="checkbox"
+                checked={selectedCalls.includes(call.callNo)}
+                onChange={() => handleCheckbox(call.callNo)}
+              />
+            </td>
+            <td className="border p-2">{call.callNo}</td>
+            <td className="border p-2">{call.customerName}</td>
+            <td className="border p-2">{call.technician}</td>
+            <td className="border p-2">{call.product}</td>
+            <td className="border p-2">{call.model}</td>
+            <td className="border p-2">
+              <span
+                className={`px-2 py-1 rounded text-xs font-semibold
+                  ${
+                    call.status === "pending"
+                      ? "bg-yellow-200 text-yellow-800"
+                      : call.status === "in-progress"
+                      ? "bg-blue-200 text-blue-800"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+              >
+                {call.status || "N/A"}
+              </span>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ) : (
+    <p className="p-4">No calls found</p>
+  )}
+</div>
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -217,5 +232,6 @@ const ResendAssignedCalls = () => {
 };
 
 export default ResendAssignedCalls;
+
 
 
