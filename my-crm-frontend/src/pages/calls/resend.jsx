@@ -9,6 +9,7 @@ const ResendAssignedCalls = () => {
   const [assignedDate, setAssignedDate] = useState("");
   const [calls, setCalls] = useState([]);
   const [selectedCalls, setSelectedCalls] = useState([]);
+  const [formattedText, setFormattedText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
 
@@ -19,7 +20,7 @@ const ResendAssignedCalls = () => {
         const res = await fetch("/api/brands");
         const data = await res.json();
         setBrands(data);
-      } catch (err) {
+      } catch {
         toast.error("Failed to fetch brands");
       }
     };
@@ -60,7 +61,7 @@ const ResendAssignedCalls = () => {
     }
   };
 
-  // Fetch calls whenever filters change
+  // Update calls whenever filters change
   useEffect(() => {
     fetchCalls();
   }, [brand, technician, assignedDate]);
@@ -80,9 +81,42 @@ const ResendAssignedCalls = () => {
     );
   };
 
+  // Generate WhatsApp formatted text like AllocateCalls.jsx
+  useEffect(() => {
+    if (selectedCalls.length === 0) {
+      setFormattedText("");
+      return;
+    }
+
+    const selectedData = calls.filter((c) => selectedCalls.includes(c.callNo));
+
+    const text = selectedData
+      .map((call) => {
+        const dateFormatted = assignedDate
+          ? new Date(assignedDate).toLocaleDateString("en-IN")
+          : "N/A";
+        return `📞 *Call Assigned*  
+---------------------------  
+📌 Call No: ${call.callNo}  
+👤 Customer: ${call.customerName}  
+📱 Phone: ${call.phoneNo || "N/A"}  
+🏠 Address: ${call.address}, ${call.pincode}  
+🛠 Product: ${call.product}, ${call.model}  
+⚡ Call Type: ${call.callSubtype || "-"}  
+❗ Problem: ${call.natureOfComplaint || "N/A"}  
+👨‍🔧 Technician: ${call.technician || "Not Assigned"}  
+⏰ Complete By: ${dateFormatted}  
+---------------------------`;
+      })
+      .join("\n\n");
+
+    setFormattedText(text);
+  }, [selectedCalls, calls, assignedDate, technician]);
+
   // Resend WhatsApp
   const handleResend = async () => {
-    if (selectedCalls.length === 0) return toast.error("Select at least one call");
+    if (selectedCalls.length === 0)
+      return toast.error("Select at least one call");
 
     try {
       const res = await fetch("/api/calls/resend-assigned", {
@@ -94,6 +128,7 @@ const ResendAssignedCalls = () => {
       if (res.ok) {
         toast.success("WhatsApp resent successfully");
         setSelectedCalls([]);
+        setFormattedText("");
       } else toast.error("Failed to resend WhatsApp");
     } catch {
       toast.error("Server error while resending");
@@ -101,12 +136,11 @@ const ResendAssignedCalls = () => {
   };
 
   return (
-    <div className="p-6 bg-[#f4f7fb] min-h-screen">
+    <div className="p-6 bg-[#f4f7fb] min-h-screen font-[Times_New_Roman] text-sm">
       <h2 className="text-xl font-semibold mb-4">Resend Assigned Calls</h2>
 
       {/* Filters */}
       <div className="flex space-x-4 mb-4">
-        {/* Brand */}
         <select
           value={brand}
           onChange={(e) => setBrand(e.target.value)}
@@ -120,7 +154,6 @@ const ResendAssignedCalls = () => {
           ))}
         </select>
 
-        {/* Technician */}
         <select
           value={technician}
           onChange={(e) => setTechnician(e.target.value)}
@@ -134,7 +167,6 @@ const ResendAssignedCalls = () => {
           ))}
         </select>
 
-        {/* Assigned Date */}
         <input
           type="date"
           value={assignedDate}
@@ -150,13 +182,32 @@ const ResendAssignedCalls = () => {
         </button>
       </div>
 
-      {/* Calls Table */}
-      <div className="border border-gray-300 rounded shadow-md overflow-auto max-h-[500px]">
-        {currentRecords.length > 0 ? (
-          <table className="min-w-[800px] w-full table-auto border-collapse text-sm">
-            <thead className="bg-gray-200">
-               <tr>
-          <th className="border p-2">Select</th>
+{/* Calls Table */}
+<div className="border border-gray-300 rounded shadow-md overflow-auto max-h-[500px]">
+  {currentRecords.length > 0 ? (
+    <table className="min-w-[800px] w-full table-auto border-collapse text-sm">
+      <thead className="bg-gray-200">
+        <tr>
+          <th className="border p-2 text-center">
+            <input
+              type="checkbox"
+              checked={
+                selectedCalls.length === currentRecords.length &&
+                currentRecords.length > 0
+              }
+              onChange={(e) => {
+                if (e.target.checked) {
+                  const newSelected = currentRecords.map((call) => call.callNo);
+                  setSelectedCalls((prev) => [...new Set([...prev, ...newSelected])]);
+                } else {
+                  const newSelected = selectedCalls.filter(
+                    (c) => !currentRecords.some((call) => call.callNo === c)
+                  );
+                  setSelectedCalls(newSelected);
+                }
+              }}
+            />
+          </th>
           <th className="border p-2">Call No</th>
           <th className="border p-2">Customer</th>
           <th className="border p-2">Technician</th>
@@ -180,26 +231,7 @@ const ResendAssignedCalls = () => {
             <td className="border p-2">{call.technician}</td>
             <td className="border p-2">{call.product}</td>
             <td className="border p-2">{call.model}</td>
-           <td className="border p-2">
-  <span
-    className={`px-2 py-1 rounded text-xs font-semibold
-      ${
-        call.status === "Pending with Technician"
-          ? "bg-yellow-200 text-yellow-800"
-          : call.status === "Spare Pending"
-          ? "bg-orange-200 text-orange-800"
-          : call.status === "Replacement"
-          ? "bg-red-200 text-red-800"
-          : call.status === "Appointment"
-          ? "bg-blue-200 text-blue-800"
-          : call.status === "Others"
-          ? "bg-purple-200 text-purple-800"
-          : "bg-gray-200 text-gray-800"
-      }`}
-  >
-    {call.status || "N/A"}
-  </span>
-</td>
+            <td className="border p-2">{call.status || "N/A"}</td>
           </tr>
         ))}
       </tbody>
@@ -208,6 +240,7 @@ const ResendAssignedCalls = () => {
     <p className="p-4">No calls found</p>
   )}
 </div>
+
 
       {/* Pagination */}
       {totalPages > 1 && (
@@ -226,6 +259,23 @@ const ResendAssignedCalls = () => {
         </div>
       )}
 
+      {/* WhatsApp Message Preview */}
+      {formattedText && (
+        <div className="mt-6">
+          <label className="block mb-2 font-semibold">
+            📋 WhatsApp Message (copy, edit & paste)
+          </label>
+          <textarea
+            value={formattedText}
+            onChange={(e) => setFormattedText(e.target.value)}
+            className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            You can edit / cut / copy this text and then paste in WhatsApp.
+          </p>
+        </div>
+      )}
+
       {/* Resend Button */}
       <button
         onClick={handleResend}
@@ -238,7 +288,3 @@ const ResendAssignedCalls = () => {
 };
 
 export default ResendAssignedCalls;
-
-
-
-
