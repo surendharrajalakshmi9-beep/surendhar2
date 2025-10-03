@@ -712,7 +712,7 @@ app.get("/api/reports", async (req, res) => {
 
     // 🔹 Good Return
     else if (reportType === "Good Return") {
-      const filter = { returnType: "good", ...brandFilter };
+      const filter = { returnType: "good", status: "Return Approved", ...brandFilter };
       if (returnDate) {
         const start = new Date(returnDate);
         start.setHours(0, 0, 0, 0);
