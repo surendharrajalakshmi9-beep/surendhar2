@@ -17,6 +17,7 @@ await mongoose.connect(MONGODB_URI);
 const store = new MongoStore({ mongoose });
 
 function createClient(clientId) {
+  try{
   const client = new Client({
     authStrategy: new RemoteAuth({
       clientId,
@@ -37,6 +38,10 @@ function createClient(clientId) {
       ],
     },
   });
+ } catch (err) {
+    console.error(`❌ Failed to create WhatsApp client ${clientId}:`, err);
+    return null; // don't crash server
+  }
 
   client.on("qr", (qr) => {
     console.log(`\n📱 Scan QR for ${clientId}:`);
