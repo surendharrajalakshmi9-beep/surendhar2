@@ -481,9 +481,7 @@ app.get("/api/spares/return", async (req, res) => {
         // Only spares NOT yet returned
         query.status = { $ne: "Return Initiated" };
       }
-    }
-
-    if (fromDate && toDate) {
+        if (fromDate && toDate) {
       query.datespare = {
         $gte: new Date(fromDate),
         $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
