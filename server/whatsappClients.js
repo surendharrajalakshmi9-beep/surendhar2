@@ -1,32 +1,29 @@
-// server/whatsappClients.js
 import pkg from "whatsapp-web.js";
-import puppeteer from "puppeteer"; // Full Puppeteer
+import puppeteer from "puppeteer";
 import qrcode from "qrcode-terminal";
 import mongoose from "mongoose";
 import { MongoStore } from "wwebjs-mongo";
 import 'dotenv/config';
 
 const { Client, RemoteAuth } = pkg;
-
 const MONGODB_URI = process.env.MONGO_URI;
 
-// ✅ Connect mongoose first
+// Connect MongoDB
 await mongoose.connect(MONGODB_URI);
 
-// ✅ Mongo store for WhatsApp sessions
+// Mongo store for WhatsApp sessions
 const store = new MongoStore({ mongoose });
 
-// 🔹 Create WhatsApp client safely
 function createClient(clientId) {
   let executablePath;
+
+  // ✅ Try Puppeteer Chromium first
   try {
-    executablePath = puppeteer.executablePath(); // use Puppeteer Chromium
-  } catch (err) {
-    console.warn(
-      `⚠️ Puppeteer executablePath not found. WhatsApp client "${clientId}" will not run.`,
-      err
-    );
-    return null; // don’t crash server
+    executablePath = puppeteer.executablePath();
+  } catch {
+    console.warn(`⚠️ Puppeteer executablePath not found for "${clientId}". Using system Chromium...`);
+    // fallback to system-installed Chromium
+    executablePath = "/usr/bin/chromium-browser";
   }
 
   try {
@@ -34,7 +31,7 @@ function createClient(clientId) {
       authStrategy: new RemoteAuth({
         clientId,
         store,
-        backupSyncIntervalMs: 300000, // optional
+        backupSyncIntervalMs: 300000,
       }),
       puppeteer: {
         executablePath,
@@ -51,24 +48,20 @@ function createClient(clientId) {
       },
     });
 
-    // 🔹 Event listeners
+    // Event listeners
     client.on("qr", (qr) => {
       console.log(`\n📱 Scan QR for ${clientId}:`);
       qrcode.generate(qr, { small: true });
     });
-
     client.on("remote_session_saved", () =>
       console.log(`💾 ${clientId} session saved to Mongo`)
     );
-
     client.on("auth_failure", (msg) =>
       console.error(`❌ ${clientId} auth failure:`, msg)
     );
-
     client.on("loading_screen", (percent, message) =>
       console.log(`📊 ${clientId} loading ${percent}%: ${message}`)
     );
-
     client.on("authenticated", () => console.log(`🔐 ${clientId} authenticated`));
     client.on("ready", () => console.log(`✅ ${clientId} is ready`));
     client.on("disconnected", (reason) =>
@@ -79,20 +72,23 @@ function createClient(clientId) {
     return client;
   } catch (err) {
     console.error(`❌ Failed to create WhatsApp client ${clientId}:`, err);
-    return null; // don’t crash server
+    return null;
   }
 }
 
-// ✅ One WhatsApp account → one client
+// One WhatsApp account → one client
 const client1 = createClient("client1");
 
-// ✅ Brand → Client mapping (must match DB brand names)
+// Brand → Client mapping
 export const brandClientMap = {
   "Bajaj - Surendhar Enterprises": client1,
   "Bajaj - S.R Enterprises": client1,
   "Atomberg": client1,
   "Usha": client1,
 };
+
+
+
 
 // ✅ Brand + Technician → Group ID mapping
 export const brandTechnicianGroupMap = {
