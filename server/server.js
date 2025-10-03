@@ -559,8 +559,7 @@ app.get("/api/spares/return", async (req, res) => {
 // --- Save Returned Spares ---
 app.post("/api/spares/return", async (req, res) => {
   try {
-    const { selectedSpares, returnType } = req.body; 
-    // selectedSpares = [{ _id, spareCode, spareName, brand, qty, returnQty, mslType, spareDate }]
+    const { selectedSpares, returnType } = req.body;
 
     if (!selectedSpares || selectedSpares.length === 0) {
       return res.status(400).json({ error: "No spares selected" });
@@ -572,34 +571,28 @@ app.post("/api/spares/return", async (req, res) => {
       const userQty = spare.returnQty || 0;
 
       if (returnType === "good") {
-        // ✅ Update Spare table: subtract returnQty
-        const updated = await Spare.findOneAndUpdate(
-          { _id: spare._id },
-          { $inc: { quantity: -userQty } },
-          { new: true }
-        );
-
-        if (!updated) {
-          console.warn(`Spare not found in Spare table: ${spare._id}`);
+        // ✅ Remove spare from Spare collection completely
+        const removed = await Spare.findOneAndDelete({ _id: spare._id });
+        if (!removed) {
+          console.warn(`Spare not found in Spare collection: ${spare._id}`);
           continue;
         }
       }
 
-      // ✅ Insert record in ReturnSpare table
+      // ✅ Insert record in ReturnSpare collection
       const returnDoc = new ReturnSpare({
         spareCode: spare.itemNo || "",
         spareName: spare.itemName || "",
         brand: spare.brand || "",
-        returnQty: userQty,  // returned qty
+        returnQty: userQty,
         mslType: spare.mslType || "",
         spareDate: spare.spareDate || new Date(),
         status: "Return Initiated",
         returnDate: new Date(),
         returnType, // good / defective
-         });
+      });
 
-    await returnDoc.save();
-
+      await returnDoc.save();
       results.push({ itemNo: spare.itemNo, success: true });
     }
 
@@ -609,8 +602,6 @@ app.post("/api/spares/return", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-
 // Fetch return spares by brand
 
 
