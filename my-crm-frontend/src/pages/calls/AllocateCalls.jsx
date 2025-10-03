@@ -1,4 +1,4 @@
-give full code by incorporating in this import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function AllocatedCalls() {
