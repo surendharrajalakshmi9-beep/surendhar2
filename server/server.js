@@ -522,24 +522,42 @@ app.get("/api/spares/return", async (req, res) => {
 });
 
 // Approve or reject a spare (from approval table)
+// Approve or reject a spare (from approval table)
 app.put("/api/spares/approval/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { approved } = req.body; // true = approve, false = reject
 
+    // Find the spare in Spare collection
     const spare = await Spare.findById(id);
     if (!spare) return res.status(404).json({ error: "Spare not found" });
+
+    // Find the corresponding ReturnSpare document
+    const returnSpare = await ReturnSpare.findOne({ spareCode: spare.itemNo, status: "Return Initiated" });
 
     if (approved) {
       // ✅ Approve: delete from Spare collection
       await Spare.findByIdAndDelete(id);
+
+      // ✅ Update status in ReturnSpare
+      if (returnSpare) {
+        returnSpare.status = "Return Approved";
+        await returnSpare.save();
+      }
+
+      res.json({ message: "Spare approved and ReturnSpare status updated" });
     } else {
-      // ❌ Reject: reset status
+      // ❌ Reject: reset status in Spare and ReturnSpare
       spare.status = "";
       await spare.save();
-    }
 
-    res.json({ message: approved ? "Spare approved and deleted" : "Spare rejected" });
+      if (returnSpare) {
+        returnSpare.status = "Return Initiated"; // keep as initiated or optional
+        await returnSpare.save();
+      }
+
+      res.json({ message: "Spare rejected" });
+    }
   } catch (err) {
     console.error("Error updating spare:", err);
     res.status(500).json({ error: "Internal server error" });
