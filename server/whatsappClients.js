@@ -1,6 +1,6 @@
-// whatsappClients.js
+// server/whatsappClients.js
 import pkg from "whatsapp-web.js";
-import puppeteer from "puppeteer";  
+import puppeteer from "puppeteer"; // Full Puppeteer
 import qrcode from "qrcode-terminal";
 import mongoose from "mongoose";
 import { MongoStore } from "wwebjs-mongo";
@@ -13,19 +13,31 @@ const MONGODB_URI = process.env.MONGO_URI;
 // ✅ Connect mongoose first
 await mongoose.connect(MONGODB_URI);
 
-// ✅ Mongo store for sessions
+// ✅ Mongo store for WhatsApp sessions
 const store = new MongoStore({ mongoose });
 
+// 🔹 Create WhatsApp client safely
 function createClient(clientId) {
+  let executablePath;
+  try {
+    executablePath = puppeteer.executablePath(); // use Puppeteer Chromium
+  } catch (err) {
+    console.warn(
+      `⚠️ Puppeteer executablePath not found. WhatsApp client "${clientId}" will not run.`,
+      err
+    );
+    return null; // don’t crash server
+  }
+
   try {
     const client = new Client({
       authStrategy: new RemoteAuth({
         clientId,
         store,
-        backupSyncIntervalMs: 300000,
+        backupSyncIntervalMs: 300000, // optional
       }),
       puppeteer: {
-        executablePath: puppeteer.executablePath(),
+        executablePath,
         headless: true,
         args: [
           "--no-sandbox",
@@ -39,6 +51,7 @@ function createClient(clientId) {
       },
     });
 
+    // 🔹 Event listeners
     client.on("qr", (qr) => {
       console.log(`\n📱 Scan QR for ${clientId}:`);
       qrcode.generate(qr, { small: true });
@@ -64,17 +77,16 @@ function createClient(clientId) {
 
     client.initialize();
     return client;
-
   } catch (err) {
     console.error(`❌ Failed to create WhatsApp client ${clientId}:`, err);
-    return null; // don't crash server
+    return null; // don’t crash server
   }
 }
 
 // ✅ One WhatsApp account → one client
 const client1 = createClient("client1");
 
-// ✅ Export properly
+// ✅ Brand → Client mapping (must match DB brand names)
 export const brandClientMap = {
   "Bajaj - Surendhar Enterprises": client1,
   "Bajaj - S.R Enterprises": client1,
@@ -82,32 +94,33 @@ export const brandClientMap = {
   "Usha": client1,
 };
 
+// ✅ Brand + Technician → Group ID mapping
 export const brandTechnicianGroupMap = {
   "Bajaj - Surendhar Enterprises": {
-    "918925343830": "120363404308952029@g.us", //Imtiyas
-    "916369976776": "120363420142240254@g.us", //Jeeva
-    "919344953857": "120363417772011497@g.us", //Agni
-    "918939756995": "120363405717911331@g.us", //Suresh
-    "918939346643": "120363397809487001@g.us", //Ajith
-    "919080459175": "120363401783442970@g.us", //Gnanavel
-    "919080033944": "120363422922583327@g.us", //Vijay
-    "917708723060": "120363399028512688@g.us", //Santhosh
+    "918925343830":"120363404308952029@g.us", //Imtiyas
+    "916369976776":"120363420142240254@g.us", //Jeeva
+    "919344953857":"120363417772011497@g.us", //Agni
+    "918939756995":"120363405717911331@g.us", //Suresh
+    "918939346643":"120363397809487001@g.us", //Ajith
+    "919080459175":"120363401783442970@g.us", //Gnanavel
+    "919080033944":"120363422922583327@g.us", //Vijay
+    "917708723060":"120363399028512688@g.us", //Santhosh
   },
   "Bajaj - S.R Enterprises": {
-    "918925343830": "120363404308952029@g.us", //Imtiyas
-    "916369976776": "120363420142240254@g.us", //Jeeva
-    "916381497458": "120363401660649252@g.us", //Kamalnath
+    "918925343830":"120363404308952029@g.us", //Imtiyas
+    "916369976776":"120363420142240254@g.us", //Jeeva
+    "916381497458":"120363401660649252@g.us", //Kamalnath
   },
   "Atomberg": {
-    "919080033944": "120363422922583327@g.us", //Vijay
+    "919080033944":"120363422922583327@g.us", //Vijay
   },
   "Usha": {
-    "919344953857": "120363296468631098@g.us", //Agni
-    "918939346643": "120363403554741254@g.us", //Ajith
-    "918925343830": "120363404308952029@g.us", //Imtiyas
-    "919080459175": "120363402603114268@g.us", //Gnanavel
-    "918939756995": "120363348976551029@g.us", //Suresh
-    "919080033944": "120363422922583327@g.us", //Vijay
-    "917708723060": "120363399028512688@g.us", //Santhosh
+    "919344953857": "120363296468631098@g.us",// Agni
+    "918939346643":"120363403554741254@g.us", //Ajith
+    "918925343830":"120363404308952029@g.us", //Imtiyas
+    "919080459175":"120363402603114268@g.us", //Gnanavel
+    "918939756995":"120363348976551029@g.us", //Suresh
+    "919080033944":"120363422922583327@g.us", //Vijay
+    "917708723060":"120363399028512688@g.us", //Santhosh
   },
 };
