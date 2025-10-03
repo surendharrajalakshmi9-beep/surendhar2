@@ -756,13 +756,18 @@ app.get("/api/returnDates", async (req, res) => {
     if (brand && brand !== "All") filter.brand = brand;
 
     const dates = await ReturnSpare.find(filter).distinct("returnDate");
-    res.json(dates);
+
+    // ✅ Convert to YYYY-MM-DD and remove duplicates
+    const uniqueDates = [...new Set(
+      dates.map(d => new Date(d).toISOString().split("T")[0])
+    )].sort((a, b) => new Date(b) - new Date(a)); // latest first
+
+    res.json(uniqueDates);
   } catch (err) {
     console.error("❌ Error fetching return dates:", err);
     res.status(500).json([]);
   }
 });
-
 
 app.get("/api/dashboardCounts", async (req, res) => {
   try {
