@@ -486,7 +486,6 @@ const fetchTechnicianCount = async (tech) => {
           </label>
           <textarea
             value={formattedText}
-            readOnly
             className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
           />
           <p className="text-xs text-gray-500 mt-1">
