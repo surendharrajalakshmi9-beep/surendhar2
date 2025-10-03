@@ -94,6 +94,7 @@ const spareSchema = new mongoose.Schema({
   datespare: { type: Date, default :"" },
   mslType: { type: String, default :"" },
   mrp: { type: Number, default: 0 }, // ✅ New field for MRP
+  status: { type: String, default: "" },
 });
 
 // Model
@@ -529,13 +530,10 @@ app.post("/api/spares/return", async (req, res) => {
       const userQty = spare.returnQty || 0;
 
       if (returnType === "good") {
-        // ✅ Remove spare from Spare collection completely
-        const removed = await Spare.findOneAndDelete({ _id: spare._id });
-        if (!removed) {
-          console.warn(`Spare not found in Spare collection: ${spare._id}`);
-          continue;
-        }
+        // ✅ Instead of deleting, update the spare's status to "Return Initiated"
+        await Spare.findByIdAndUpdate(spare._id, { status: "Return Initiated" });
       }
+
 
       // ✅ Insert record in ReturnSpare collection
       const returnDoc = new ReturnSpare({
