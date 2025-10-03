@@ -602,7 +602,7 @@ app.post("/api/spares/return", async (req, res) => {
 app.get("/api/returnspares", async (req, res) => {
   try {
     const { brand } = req.query;
-    let query = { status: "Return Initiated" }; // 👈 filter by status
+    let query = { status: "Return Approved" }; // 👈 filter by status
 
     if (brand) query.brand = brand; // apply brand filter if provided
 
