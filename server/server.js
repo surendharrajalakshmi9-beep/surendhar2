@@ -477,13 +477,10 @@ app.post("/api/spares/return", async (req, res) => {
 
     for (const spare of selectedSpares) {
       const userQty = spare.returnQty || 0;
-
       if (returnType === "good") {
         // Remove from Spare collection
-        await Spare.findOneAndDelete({ _id: spare._id });
-      }
-
-      // Insert into ReturnSpare
+        //await Spare.findOneAndDelete({ _id: spare._id });
+           // Insert] into ReturnSpare
       const returnDoc = new ReturnSpare({
         spareCode: spare.itemNo || "",
         spareName: spare.itemName || "",
