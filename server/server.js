@@ -93,6 +93,7 @@ const spareSchema = new mongoose.Schema({
   quantity: { type: Number, default :"" },
   datespare: { type: Date, default :"" },
   mslType: { type: String, default :"" },
+  mrp: { type: Number, default: 0 }, // ✅ New field for MRP
 });
 
 // Model
@@ -259,21 +260,22 @@ app.get("/api/calls", async (req, res) => {
 });
 
 
-// Routes
-app.post("/api/incomingspares", async(req, res) => {
-    const { brand, itemNo, itemName, quantity, datespare, mslType } = req.body;
-  
-  console.log("Received spare:", req.body);
+// POST route
+app.post("/api/incomingspares", async (req, res) => {
+  const { brand, itemNo, itemName, quantity, datespare, mslType, mrp } = req.body;
+
   const newSpare = new Spare({
-      brand, 
-      itemNo, 
-      itemName, 
-      quantity, 
-      datespare, 
-      mslType
-    });
-   await newSpare.save(); 
-    res.status(201).json({ message: "Spare saved" });
+    brand,
+    itemNo,
+    itemName,
+    quantity,
+    datespare,
+    mslType,
+    mrp, // ✅ Save MRP
+  });
+
+  await newSpare.save();
+  res.status(201).json({ message: "Spare saved" });
 });
 // Get spare by itemNo
 app.get("/api/incomingspares/:itemNo", async (req, res) => {
