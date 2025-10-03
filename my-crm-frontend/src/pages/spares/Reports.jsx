@@ -139,22 +139,21 @@ const Reports = () => {
         )}
 
         {/* Return Date for Good Return */}
-        {reportType === "Good Return" && (
-          <div>
-            <label className="block text-sm font-medium mb-1">Return Date</label>
-            <select
-              value={selectedReturnDate}
-              onChange={(e) => setSelectedReturnDate(e.target.value)}
-              className="border p-2 rounded w-full"
-            >
-              <option value="">Select Date</option>
-              {returnDates.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-          </div>
-        )}
-
+      {reportType === "Good Return" && (
+  <div>
+    <label className="block text-sm font-medium mb-1">Return Date</label>
+    <select
+      value={selectedReturnDate}
+      onChange={(e) => setSelectedReturnDate(e.target.value)}
+      className="border p-2 rounded w-full"
+    >
+      <option value="">Select Date</option>
+      {returnDates.map((d) => (
+        <option key={d} value={d}>{d}</option>
+      ))}
+    </select>
+  </div>
+)}
         <div className="flex items-end">
           <button
             onClick={handleFetch}
