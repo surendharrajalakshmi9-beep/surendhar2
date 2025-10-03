@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
+import * as XLSX from "xlsx";
 
 const Returnspare = () => {
   const [brand, setBrand] = useState("");
@@ -121,6 +122,25 @@ useEffect(() => {
       alert("Error while initiating return.");
     }
   };
+ const exportExcel = (data) => {
+    const formattedData = data.map((s) => {
+      const returnQty = condition === "good" ? editQty[s._id] || 0 : s.qty || s.quantity;
+      const amount = returnQty * (s.mrp || 0); // Use MRP from DB
+      return {
+        "Spare Code": s.spareCode || s.itemNo,
+        "Spare Name": s.spareName || s.itemName,
+        "Available Qty": s.qty || s.quantity,
+        "Return Qty": returnQty,
+        Amount: amount.toFixed(2),
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "ReturnedSpares");
+    XLSX.writeFile(workbook, `ReturnedSpares_${brand || "All"}_${new Date().toISOString()}.xlsx`);
+  };
+
 
   const pageSpares = spares.slice(
     (currentPage - 1) * recordsPerPage,
@@ -196,6 +216,7 @@ useEffect(() => {
                 {condition === "good" && <th className="border p-2">Return Qty</th>}
                 <th className="border p-2">Spare Date</th>
                 <th className="border p-2">No. of Days</th> 
+                 <th className="border p-2">MRP</th>
               </tr>
             </thead>
        <tbody>
@@ -260,6 +281,8 @@ useEffect(() => {
             />
           </td>
         )}
+         <td className="border p-2">{s.mrp || 0}</td>
+
         <td className="border p-2">{formattedDate || "-"}</td>
         <td className="border p-2 text-center">
           {daysDiff !== null ? daysDiff : "-"}
@@ -298,7 +321,8 @@ useEffect(() => {
               onClick={handleReturn}
               className="bg-green-600 text-white px-4 py-2 rounded"
             >
-              Return
+             Return & Export Excel
+
             </button>
           </div>
         </>
