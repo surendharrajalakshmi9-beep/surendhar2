@@ -465,31 +465,37 @@ app.get("/api/technicians", async (req, res) => {
   }
 });
 
+// Fetch spares for return or approval
 app.get("/api/spares/return", async (req, res) => {
-  const { brand, fromDate, toDate, mslStatus, condition } = req.query;
-
-  console.log("Received filters:", req.query);
-
   try {
-    let spares = [];
+    const { brand, fromDate, toDate, mslStatus, condition, showApproval } = req.query;
 
+    let query = {};
+
+    // For good condition
     if (condition === "good") {
-      let query = {
-    status: { $ne: "Return Initiated" }, // ✅ exclude returned spares
-  };
-      if (fromDate && toDate) {
-        query.datespare = {
-          $gte: new Date(fromDate),
-          $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
-        };
+      if (showApproval === "true") {
+        // ✅ Approval process: only spares with Return Initiated
+        query.status = "Return Initiated";
+      } else {
+        // Only spares NOT yet returned
+        query.status = { $ne: "Return Initiated" };
       }
-      if (brand) query.brand = brand;
-      if (mslStatus) query.mslType = mslStatus;
+    }
 
-      console.log("Good query:", query);
-      spares = await Spare.find(query)
-        .select("brand itemNo itemName quantity datespare mslType")
-        .lean();
+    if (fromDate && toDate) {
+      query.datespare = {
+        $gte: new Date(fromDate),
+        $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
+      };
+    }
+
+    if (brand) query.brand = brand;
+    if (mslStatus) query.mslType = mslStatus;
+
+    const spares = await Spare.find(query)
+      .select("brand itemNo itemName quantity datespare mslType mrp status")
+      .lean();
     } else if (condition === "defective") {
       let query = { defectiveSubmitted: "yes" };
       if (fromDate && toDate) {
@@ -515,6 +521,30 @@ app.get("/api/spares/return", async (req, res) => {
   }
 });
 
+// Approve or reject a spare (from approval table)
+app.put("/api/spares/approval/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { approved } = req.body; // true = approve, false = reject
+
+    const spare = await Spare.findById(id);
+    if (!spare) return res.status(404).json({ error: "Spare not found" });
+
+    if (approved) {
+      // ✅ Approve: delete from Spare collection
+      await Spare.findByIdAndDelete(id);
+    } else {
+      // ❌ Reject: reset status
+      spare.status = "";
+      await spare.save();
+    }
+
+    res.json({ message: approved ? "Spare approved and deleted" : "Spare rejected" });
+  } catch (err) {
+    console.error("Error updating spare:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 // --- Save Returned Spares ---
