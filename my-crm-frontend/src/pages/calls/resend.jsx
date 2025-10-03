@@ -180,20 +180,26 @@ const ResendAssignedCalls = () => {
             <td className="border p-2">{call.technician}</td>
             <td className="border p-2">{call.product}</td>
             <td className="border p-2">{call.model}</td>
-            <td className="border p-2">
-              <span
-                className={`px-2 py-1 rounded text-xs font-semibold
-                  ${
-                    call.status === "pending"
-                      ? "bg-yellow-200 text-yellow-800"
-                      : call.status === "in-progress"
-                      ? "bg-blue-200 text-blue-800"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-              >
-                {call.status || "N/A"}
-              </span>
-            </td>
+           <td className="border p-2">
+  <span
+    className={`px-2 py-1 rounded text-xs font-semibold
+      ${
+        call.status === "Pending with Technician"
+          ? "bg-yellow-200 text-yellow-800"
+          : call.status === "Spare Pending"
+          ? "bg-orange-200 text-orange-800"
+          : call.status === "Replacement"
+          ? "bg-red-200 text-red-800"
+          : call.status === "Appointment"
+          ? "bg-blue-200 text-blue-800"
+          : call.status === "Others"
+          ? "bg-purple-200 text-purple-800"
+          : "bg-gray-200 text-gray-800"
+      }`}
+  >
+    {call.status || "N/A"}
+  </span>
+</td>
           </tr>
         ))}
       </tbody>
@@ -232,6 +238,7 @@ const ResendAssignedCalls = () => {
 };
 
 export default ResendAssignedCalls;
+
 
 
 
