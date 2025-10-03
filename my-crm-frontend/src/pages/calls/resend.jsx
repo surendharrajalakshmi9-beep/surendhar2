@@ -105,7 +105,7 @@ const ResendAssignedCalls = () => {
 ⚡ Call Type: ${call.callSubtype || "-"}  
 ❗ Problem: ${call.natureOfComplaint || "N/A"}  
 👨‍🔧 Technician: ${call.technician || "Not Assigned"}  
-⏰ Complete By: ${dateFormatted}  
+⏰ Status: ${call.status}  
 ---------------------------`;
       })
       .join("\n\n");
@@ -288,3 +288,4 @@ const ResendAssignedCalls = () => {
 };
 
 export default ResendAssignedCalls;
+
