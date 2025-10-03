@@ -21,15 +21,13 @@ export default function AllocatedCalls() {
     const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
 // inside your component
-const [formattedText, setFormattedText] = useState("");
+ const [formattedText, setFormattedText] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
+  const [callCount, setCallCount] = useState(0);
+  const [technicianCount, setTechnicianCount] = useState(0);
 
-// Format selected calls
-useEffect(() => {
-  if (selectedCalls.length === 0) {
-    setFormattedText("");
-    return;
-  }
- 
+
+
   // ✅ Fetch brands from backend
   useEffect(() => {
     const fetchBrands = async () => {
@@ -226,6 +224,44 @@ const fetchTechnicianCount = async (tech) => {
     fetchCalls();
   }, [brand, selectedProducts, selectedPincodes]);
 
+
+
+// ✅ Generate WhatsApp formatted text
+  useEffect(() => {
+    if (selectedCalls.length === 0) {
+      setFormattedText("");
+      return;
+    }
+
+    const selectedData = calls.filter((c) =>
+      selectedCalls.includes(c.callNo)
+    );
+
+    const text = selectedData
+      .map((call) => {
+        const tatFormatted = assignedDate
+          ? new Date(assignedDate).toLocaleDateString("en-IN")
+          : "N/A";
+
+        return `📞 *New Call Assigned*  
+---------------------------  
+📌 Call No: ${call.callNo}  
+👤 Customer: ${call.customerName}  
+📱 Phone: ${call.phoneNo || "N/A"}  
+🏠 Address: ${call.address}, ${call.pincode}  
+🛠 Product: ${call.product}, ${call.model}  
+⚡ Call Type: ${call.callSubtype || "-"}  
+❗ Problem: ${call.natureOfComplaint || "N/A"}  
+👨‍🔧 Technician: ${technician || "Not Assigned"}  
+⏰ Complete By: ${tatFormatted}  
+---------------------------`;
+      })
+      .join("\n\n");
+
+    setFormattedText(text);
+  }, [selectedCalls, calls, assignedDate, technician]);
+
+  
    // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -443,6 +479,25 @@ const fetchTechnicianCount = async (tech) => {
         </div>
       )}
 
+ {/* ✅ WhatsApp Message Preview */}
+      {formattedText && (
+        <div className="mt-6">
+          <label className="block mb-2 font-semibold">
+            📋 WhatsApp Message (copy & paste)
+          </label>
+          <textarea
+            value={formattedText}
+            readOnly
+            className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Select calls + technician + date → Copy this text → Paste in WhatsApp.
+          </p>
+        </div>
+      )}
+
+
+  
       {/* Edit Modal */}
       {editData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
