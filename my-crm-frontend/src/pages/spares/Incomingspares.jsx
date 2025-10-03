@@ -13,7 +13,7 @@ const IncomingSpares = () => {
 
   const [datespare, setDate] = useState("");
   const [mslType, setMsl] = useState("");
-
+const [mrp, setMrp] = useState(""); // ✅ New state for MRP
   // ✅ Fetch brands from backend
   useEffect(() => {
     const fetchBrands = async () => {
@@ -52,18 +52,27 @@ const handleSubmit = async (e) => {
     );
 
     if (existingSpare) {
-      if (existingSpare.mslType === mslType) {
-        // ✅ Update quantity if MSL type matches
-        const updatedQuantity = parseInt(quantity, 10);
-
-        await axios.put(`/api/incomingspares/${itemNo}`, {
-          quantity: updatedQuantity,
-          datespare, // update to provided date
-        });
-
-        toast.success("Spare quantity updated successfully!");
+        if (existingSpare.mslType === mslType) {
+          const updatedQuantity = parseInt(quantity, 10);
+          await axios.put(`/api/incomingspares/${itemNo}`, {
+            quantity: updatedQuantity,
+            datespare,
+            mrp, // ✅ Save MRP
+          });
+          toast.success("Spare quantity updated successfully!");
+        } else {
+          await axios.post("/api/incomingspares", {
+            brand,
+            itemNo,
+            itemName,
+            quantity,
+            datespare,
+            mslType,
+            mrp, // ✅ Save MRP
+          });
+          toast.success("New spare record created (different MSL type)!");
+        }
       } else {
-        // 🚀 Create new record if MSL type is different
         await axios.post("/api/incomingspares", {
           brand,
           itemNo,
@@ -71,37 +80,24 @@ const handleSubmit = async (e) => {
           quantity,
           datespare,
           mslType,
+          mrp, // ✅ Save MRP
         });
-
-        toast.success("New spare record created (different MSL type)!");
+        toast.success("New spare record created!");
       }
-    } else {
-      // 🆕 No existing spare → create new record
-      await axios.post("/api/incomingspares", {
-        brand,
-        itemNo,
-        itemName,
-        quantity,
-        datespare,
-        mslType,
-      });
 
-      toast.success("New spare record created!");
+      // Reset fields
+      setBrand("");
+      setItemNo("");
+      setItemName("");
+      setQuantity("");
+      setDate("");
+      setMsl("");
+      setMrp(""); // Reset MRP
+    } catch (error) {
+      console.error("Error saving spare:", error);
+      toast.error("Failed to save spare!");
     }
-
-    // Reset fields after save
-    setBrand("");
-    setItemNo("");
-    setItemName("");
-    setQuantity("");
-    setDate("");
-    setMsl("");
-
-  } catch (error) {
-    console.error("Error saving spare:", error);
-    toast.error("Failed to save spare!");
-  }
-};
+  };
 
 
 
@@ -177,6 +173,17 @@ const handleSubmit = async (e) => {
           />
         </div>
 
+ {/* MRP */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">MRP per Unit</label>
+          <input
+            type="number"
+            value={mrp}
+            onChange={(e) => setMrp(e.target.value)}
+            placeholder="Enter MRP"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2"
+          />
+        </div>
 
         {/* MSL */}
         <div className="flex items-center">
