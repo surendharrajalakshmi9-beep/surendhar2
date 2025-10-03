@@ -645,20 +645,15 @@ app.get("/api/spares/:code", async (req, res) => {
 
 app.get("/api/reports", async (req, res) => {
   try {
-    const { brand, reportType, spareCode } = req.query;
+    const { brand, reportType, spareCode, returnDate } = req.query;
     let data = [];
- const brandFilter = (brand && brand !== "All") ? { brand } : {};
+    const brandFilter = (brand && brand !== "All") ? { brand } : {};
+
     if (reportType === "Spare Availability") {
-     
-      if (!spareCode) {
-        return res.status(400).json({ error: "Spare code is required" });
-      }
+      if (!spareCode) return res.status(400).json({ error: "Spare code is required" });
 
       const spare = await Spare.findOne({ itemNo: spareCode, ...brandFilter });
-       
-      if (!spare) {
-        return res.json([]); // no spare found
-      }
+      if (!spare) return res.json([]);
 
       data = [{
         spareCode: spare.itemNo,
@@ -666,13 +661,12 @@ app.get("/api/reports", async (req, res) => {
         quantity: spare.quantity,
         dateSpare: spare.datespare ? spare.datespare.toISOString().split("T")[0] : null
       }];
-
-      return res.json(data);   // ✅ return here to stop execution
+      return res.json(data);
     }
 
     else if (reportType === "Not Received") {
-      const pendingCalls = await CallDetail.find({ status: "spare pending", ...brandFilter  });
-      const allSpares = await Spare.find({ ...brandFilter }, { ItemNo: 1 });
+      const pendingCalls = await CallDetail.find({ status: "spare pending", ...brandFilter });
+      const allSpares = await Spare.find({ ...brandFilter }, { itemNo: 1 });
       const availableItemNos = allSpares.map(s => s.itemNo);
 
       data = pendingCalls
@@ -683,88 +677,101 @@ app.get("/api/reports", async (req, res) => {
           spareCode: c.spareCode,
           status: c.status
         }));
-
-      return res.json(data);   // ✅ return here to stop execution
+      return res.json(data);
     }
+
     else if (reportType === "Not Allocated") {
-      // get pending calls
-      const pendingCalls = await CallDetail.find({ status: "spare pending", ...brandFilter  });
-
-      // get spares by brand
-      const spares = await Spare.find({ ...brandFilter  });
-
-      // create lookup for quick access
+      const pendingCalls = await CallDetail.find({ status: "spare pending", ...brandFilter });
+      const spares = await Spare.find({ ...brandFilter });
       const spareMap = {};
-      spares.forEach(s => {
-        spareMap[s.itemNo] = s;
-      });
+      spares.forEach(s => { spareMap[s.itemNo] = s; });
 
-      // filter calls where spare exists and qty condition satisfied
       data = pendingCalls
-        .filter(c => {
-          const spare = spareMap[c.spareCode];
-          return spare && c.qty <= spare.quantity;
-        })
+        .filter(c => spareMap[c.spareCode] && c.qty <= spareMap[c.spareCode]?.quantity)
         .map(c => ({
           callNo: c.callNo,
           brand: c.brand,
           spareCode: c.spareCode,
           callQty: c.qty,
           availableQty: spareMap[c.spareCode]?.quantity || 0,
-       
         }));
-
-      return res.json(data);   // ✅ stop execution
+      return res.json(data);
     }
-      // 🔹 Defective Received
+
     else if (reportType === "Defective Received") {
-      const defectiveCalls = await CallDetail.find({ 
-        status: "completed", 
-        defectiveSubmitted: "yes", 
-        ...brandFilter  
-      });
-
+      const defectiveCalls = await CallDetail.find({ status: "completed", defectiveSubmitted: "yes", ...brandFilter });
       data = defectiveCalls.map(c => ({
         callNo: c.callNo,
         brand: c.brand,
         spareCode: c.spareCode,
-        spareName:c.spareName,
+        spareName: c.spareName,
         status: c.status,
-        quantity:c.qty,
+        quantity: c.qty,
         defective: c.defectiveSubmitted
       }));
-
-      return res.json(data);   // ✅ stop execution
+      return res.json(data);
     }
-    // 🔹 Defective Not Received
+
     else if (reportType === "Defective Not Received") {
-      const defectiveCalls = await CallDetail.find({ 
-        status: "spare allocated", 
-        defectiveSubmitted: "no", 
-        ...brandFilter  
-      });
-
+      const defectiveCalls = await CallDetail.find({ status: "spare allocated", defectiveSubmitted: "no", ...brandFilter });
       data = defectiveCalls.map(c => ({
         callNo: c.callNo,
         brand: c.brand,
         spareCode: c.spareCode,
-        spareName:c.spareName,
+        spareName: c.spareName,
         status: c.status,
-        quantity:c.qty,
+        quantity: c.qty,
         defective: c.defectiveSubmitted
       }));
-
-      return res.json(data);   // ✅ stop execution
+      return res.json(data);
     }
 
+    // 🔹 Good Return
+    else if (reportType === "Good Return") {
+      const filter = { returnType: "good", ...brandFilter };
+      if (returnDate) {
+        const start = new Date(returnDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(returnDate);
+        end.setHours(23, 59, 59, 999);
+        filter.returnDate = { $gte: start, $lte: end };
+      }
+
+      const returns = await ReturnSpare.find(filter);
+      data = returns.map(r => ({
+        spareCode: r.spareCode,
+        spareName: r.spareName,
+        brand: r.brand,
+        returnQty: r.returnQty,
+        returnDate: r.returnDate ? r.returnDate.toISOString().split("T")[0] : null,
+        status: r.status
+      }));
+      return res.json(data);
+    }
 
     // fallback
-    return res.json([]);   // ✅ catch all
+    return res.json([]);
+
   } catch (err) {
     console.error("❌ Error generating report:", err);
     return res.status(500).json({ error: "Server error" });
   }
 });
+
+app.get("/api/returnDates", async (req, res) => {
+  try {
+    const { brand } = req.query;
+    const filter = { returnType: "good" };
+    if (brand && brand !== "All") filter.brand = brand;
+
+    const dates = await ReturnSpare.find(filter).distinct("returnDate");
+    res.json(dates);
+  } catch (err) {
+    console.error("❌ Error fetching return dates:", err);
+    res.status(500).json([]);
+  }
+});
+
 
 app.get("/api/dashboardCounts", async (req, res) => {
   try {
