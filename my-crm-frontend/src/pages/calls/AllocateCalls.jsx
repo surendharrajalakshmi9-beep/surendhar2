@@ -478,21 +478,23 @@ const fetchTechnicianCount = async (tech) => {
         </div>
       )}
 
- {/* ✅ WhatsApp Message Preview */}
-      {formattedText && (
-        <div className="mt-6">
-          <label className="block mb-2 font-semibold">
-            📋 WhatsApp Message (copy & paste)
-          </label>
-          <textarea
-            value={formattedText}
-            className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Select calls + technician + date → Copy this text → Paste in WhatsApp.
-          </p>
-        </div>
-      )}
+
+  {/* ✅ WhatsApp Message Preview */}
+{formattedText && (
+  <div className="mt-6">
+    <label className="block mb-2 font-semibold">
+      📋 WhatsApp Message (copy, edit & paste)
+    </label>
+    <textarea
+      value={formattedText}
+      onChange={(e) => setFormattedText(e.target.value)} // allow editing
+      className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
+    />
+    <p className="text-xs text-gray-500 mt-1">
+      You can edit / cut / copy this text and then paste in WhatsApp.
+    </p>
+  </div>
+)}
 
 
   
