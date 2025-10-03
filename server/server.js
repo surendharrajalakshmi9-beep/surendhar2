@@ -465,39 +465,41 @@ app.get("/api/technicians", async (req, res) => {
   }
 });
 
-// Fetch spares for return or approval
-app.get("/api/spares/return", async (req, res) => {
+// --- Return Selected Spares ---
+app.post("/api/spares/return", async (req, res) => {
   try {
-    const { brand, fromDate, toDate, mslStatus, condition, showApproval } = req.query;
+    const { selectedSpares, returnType } = req.body;
 
-    let spares = []; // Declare here to be accessible later
-    let query = {};
+    if (!selectedSpares || selectedSpares.length === 0)
+      return res.status(400).json({ error: "No spares selected" });
 
-    if (condition === "good") {
-      if (showApproval === "true") {
-        // ✅ Approval process: only spares with Return Initiated
-        query.status = "Return Initiated";
-      } else {
-        // Only spares NOT yet returned
-        query.status = { $ne: "Return Initiated" };
+    let results = [];
+
+    for (const spare of selectedSpares) {
+      const userQty = spare.returnQty || 0;
+
+      if (returnType === "good") {
+        // Remove from Spare collection
+        await Spare.findOneAndDelete({ _id: spare._id });
       }
 
-      if (fromDate && toDate) {
-        query.datespare = {
-          $gte: new Date(fromDate),
-          $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
-        };
-      }
+      // Insert into ReturnSpare
+      const returnDoc = new ReturnSpare({
+        spareCode: spare.itemNo || "",
+        spareName: spare.itemName || "",
+        brand: spare.brand || "",
+        returnQty: userQty,
+        mslType: spare.mslType || "",
+        spareDate: spare.datespare || new Date(),
+        status: "Return Initiated",
+        returnType,
+      });
+      await returnDoc.save();
+      results.push({ itemNo: spare.itemNo, success: true });
+    }
 
-      if (brand) query.brand = brand;
-      if (mslStatus) query.mslType = mslStatus;
-
-      console.log("Good query:", query);
-      spares = await Spare.find(query)
-        .select("brand itemNo itemName quantity datespare mslType mrp status")
-        .lean();
-
-    } else if (condition === "defective") {
+    res.json({ message: "Return processed successfully", results });
+  }  else if (condition === "defective") {
       query = { defectiveSubmitted: "yes" };
 
       if (fromDate && toDate) {
@@ -524,49 +526,31 @@ app.get("/api/spares/return", async (req, res) => {
   }
 });
 
-// Approve or reject a spare (from approval table)
-// Approve or reject a spare (from approval table)
+// --- Approve / Reject Return Spare ---
 app.put("/api/spares/approval/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { approved } = req.body; // true = approve, false = reject
+    const { approved } = req.body; // boolean
 
-    // Find the spare in Spare collection
-    const spare = await Spare.findById(id);
-    if (!spare) return res.status(404).json({ error: "Spare not found" });
-
-    // Find the corresponding ReturnSpare document
-    const returnSpare = await ReturnSpare.findOne({ spareCode: spare.itemNo, status: "Return Initiated" });
+    const returnSpare = await ReturnSpare.findById(req.params.id);
+    if (!returnSpare) return res.status(404).json({ error: "Return spare not found" });
 
     if (approved) {
-      // ✅ Approve: delete from Spare collection
-      await Spare.findByIdAndDelete(id);
+      returnSpare.status = "Return Approved";
+      await returnSpare.save();
 
-      // ✅ Update status in ReturnSpare
-      if (returnSpare) {
-        returnSpare.status = "Return Approved";
-        await returnSpare.save();
-      }
-
-      res.json({ message: "Spare approved and ReturnSpare status updated" });
+      // Remove from Spare collection if still exists
+      await Spare.findOneAndDelete({ itemNo: returnSpare.spareCode });
     } else {
-      // ❌ Reject: reset status in Spare and ReturnSpare
-      spare.status = "";
-      await spare.save();
-
-      if (returnSpare) {
-        returnSpare.status = "Return Initiated"; // keep as initiated or optional
-        await returnSpare.save();
-      }
-
-      res.json({ message: "Spare rejected" });
+      returnSpare.status = "Rejected";
+      await returnSpare.save();
     }
+
+    res.json({ success: true, status: returnSpare.status });
   } catch (err) {
-    console.error("Error updating spare:", err);
+    console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // --- Save Returned Spares ---
 app.post("/api/spares/return", async (req, res) => {
