@@ -228,7 +228,7 @@ app.get("/api/calls/filter-assigned", async (req, res) => {
     const { brand, technician, assignedDate } = req.query;
 
     const query = { 
-      status: { $eq: "pending", $ne: "completed" }
+      status: { $ne: "completed" }
     };
 
     if (brand) query.brand = brand;
