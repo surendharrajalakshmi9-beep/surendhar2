@@ -62,7 +62,7 @@ export default function AllocatedCalls() {
       toast.error("Failed to load filters");
     }
   };
-const [totalCount, setTotalCount] = useState(0);
+
 
  const fetchCalls = async () => {
   try {
@@ -86,7 +86,7 @@ const [totalCount, setTotalCount] = useState(0);
 };
 
 
-const [callCount, setCallCount] = useState(0);
+
 
 const fetchCallCount = async () => {
   try {
@@ -158,7 +158,6 @@ useEffect(() => {
     }
   };
 
-const [technicianCount, setTechnicianCount] = useState(0);
 
 const fetchTechnicianCount = async (tech) => {
   if (!tech) {
