@@ -121,7 +121,7 @@ useEffect(() => {
       console.error("Error initiating return:", error);
       alert("Error while initiating return.");
     }
-  };
+  
  const exportExcel = (data) => {
     const formattedData = data.map((s) => {
       const returnQty = condition === "good" ? editQty[s._id] || 0 : s.qty || s.quantity;
@@ -140,7 +140,7 @@ useEffect(() => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "ReturnedSpares");
     XLSX.writeFile(workbook, `ReturnedSpares_${brand || "All"}_${new Date().toISOString()}.xlsx`);
   };
-
+  };
 
   const pageSpares = spares.slice(
     (currentPage - 1) * recordsPerPage,
@@ -322,7 +322,7 @@ useEffect(() => {
               onClick={handleReturn}
               className="bg-green-600 text-white px-4 py-2 rounded"
             >
-             Return & Export Excel
+             Return and Export Excel
 
             </button>
           </div>
