@@ -281,12 +281,13 @@ useEffect(() => {
             />
           </td>
         )}
-         <td className="border p-2">{s.mrp || 0}</td>
+       
 
         <td className="border p-2">{formattedDate || "-"}</td>
         <td className="border p-2 text-center">
           {daysDiff !== null ? daysDiff : "-"}
         </td>
+          <td className="border p-2">{s.mrp || 0}</td>
       </tr>
     );
   })}
