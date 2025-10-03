@@ -98,29 +98,44 @@ useEffect(() => {
     setEditQty((prev) => ({ ...prev, [id]: num }));
   };
 
-  const handleReturn = async () => {
-    if (selected.length === 0) {
-      alert("Please select at least one spare to return.");
-      return;
+const handleReturn = async () => {
+  if (selected.length === 0) {
+    alert("Please select at least one spare to return.");
+    return;
+  }
+
+  const selectedSpares = spares.filter((s) => selected.includes(s._id));
+  const payload = selectedSpares.map((s) => ({
+    ...s,
+    returnQty: condition === "good" ? editQty[s._id] || 0 : s.qty || s.quantity,
+  }));
+
+  try {
+    const res = await axios.post("/api/spares/return", {
+      selectedSpares: payload,
+      returnType: condition,
+    });
+
+    alert("Return initiated successfully.");
+
+    // ✅ Optimistically remove returned spares from UI
+    if (condition === "good") {
+      setSpares((prev) => prev.filter((s) => !selected.includes(s._id)));
     }
 
-    const selectedSpares = spares.filter((s) => selected.includes(s._id));
-    const payload = selectedSpares.map((s) => ({
-      ...s,
-      returnQty: condition === "good" ? editQty[s._id] || 0 : s.qty || s.quantity,
-    }));
+    // ✅ Reset selection
+    setSelected([]);
+    setEditQty({});
 
-    try {
-      await axios.post("/api/spares/return", {
-        selectedSpares: payload,
-        returnType: condition,
-      });
-      alert("Return initiated successfully.");
-      fetchSpares(); // reload after return
-    } catch (error) {
-      console.error("Error initiating return:", error);
-      alert("Error while initiating return.");
-    }
+    // ✅ Export Excel
+    exportExcel(selectedSpares);
+
+  } catch (error) {
+    console.error("Error initiating return:", error);
+    alert("Error while initiating return.");
+  }
+};
+
   
  const exportExcel = (data) => {
     const formattedData = data.map((s) => {
@@ -140,7 +155,7 @@ useEffect(() => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "ReturnedSpares");
     XLSX.writeFile(workbook, `ReturnedSpares_${brand || "All"}_${new Date().toISOString()}.xlsx`);
   };
-  };
+
 
   const pageSpares = spares.slice(
     (currentPage - 1) * recordsPerPage,
