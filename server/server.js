@@ -470,9 +470,9 @@ app.get("/api/spares/return", async (req, res) => {
   try {
     const { brand, fromDate, toDate, mslStatus, condition, showApproval } = req.query;
 
+    let spares = []; // Declare here to be accessible later
     let query = {};
 
-    // For good condition
     if (condition === "good") {
       if (showApproval === "true") {
         // ✅ Approval process: only spares with Return Initiated
@@ -481,27 +481,32 @@ app.get("/api/spares/return", async (req, res) => {
         // Only spares NOT yet returned
         query.status = { $ne: "Return Initiated" };
       }
-        if (fromDate && toDate) {
-      query.datespare = {
-        $gte: new Date(fromDate),
-        $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
-      };
-    }
 
-    if (brand) query.brand = brand;
-    if (mslStatus) query.mslType = mslStatus;
+      if (fromDate && toDate) {
+        query.datespare = {
+          $gte: new Date(fromDate),
+          $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
+        };
+      }
 
-    const spares = await Spare.find(query)
-      .select("brand itemNo itemName quantity datespare mslType mrp status")
-      .lean();
+      if (brand) query.brand = brand;
+      if (mslStatus) query.mslType = mslStatus;
+
+      console.log("Good query:", query);
+      spares = await Spare.find(query)
+        .select("brand itemNo itemName quantity datespare mslType mrp status")
+        .lean();
+
     } else if (condition === "defective") {
-      let query = { defectiveSubmitted: "yes" };
+      query = { defectiveSubmitted: "yes" };
+
       if (fromDate && toDate) {
         query.completionDate = {
           $gte: new Date(fromDate),
           $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
         };
       }
+
       if (brand) query.brand = brand;
 
       console.log("Defective query:", query);
