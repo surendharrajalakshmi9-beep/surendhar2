@@ -466,7 +466,7 @@ app.get("/api/technicians", async (req, res) => {
 });
 
 // --- Return Selected Spares ---
-app.post("/api/spares/return", async (req, res) => {
+app.get("/api/spares/return", async (req, res) => {
   try {
     const { selectedSpares, returnType, brand, fromDate, toDate } = req.body;
 
