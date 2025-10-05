@@ -464,13 +464,11 @@ app.get("/api/technicians", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch technicians" });
   }
 });
-
 // --- Return Selected Spares ---
-app.get("/api/spares/return", async (req, res) => {
+app.post("/api/spares/return", async (req, res) => {
   try {
     const { selectedSpares, returnType, brand, fromDate, toDate } = req.body;
 
-    // Check if any spares are selected
     if (!selectedSpares || selectedSpares.length === 0) {
       return res.status(400).json({ error: "No spares selected" });
     }
@@ -481,6 +479,7 @@ app.get("/api/spares/return", async (req, res) => {
     if (returnType === "good") {
       for (const spare of selectedSpares) {
         const userQty = spare.returnQty || 0;
+
         const returnDoc = new ReturnSpare({
           spareCode: spare.itemNo || "",
           spareName: spare.itemName || "",
@@ -491,9 +490,11 @@ app.get("/api/spares/return", async (req, res) => {
           status: "Return Initiated",
           returnType,
         });
+
         await returnDoc.save();
         results.push({ itemNo: spare.itemNo, success: true });
       }
+
       return res.json({ message: "Good return processed successfully", results });
     }
 
@@ -510,13 +511,10 @@ app.get("/api/spares/return", async (req, res) => {
 
       if (brand) query.brand = brand;
 
-      console.log("Defective query:", query);
-
       const spares = await CallDetail.find(query)
         .select("brand spareCode spareName qty completionDate")
         .lean();
 
-      console.log("Final defective spares:", spares.length);
       return res.json({ message: "Defective spares fetched successfully", spares });
     }
 
@@ -527,6 +525,33 @@ app.get("/api/spares/return", async (req, res) => {
 
   } catch (err) {
     console.error("Error processing return spares:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+// ✅ --- GET Return Spares for display ---
+app.get("/api/spares/return", async (req, res) => {
+  try {
+    const { brand, condition, showApproval } = req.query;
+    const filter = {};
+
+    if (brand) filter.brand = brand;
+    if (condition) filter.returnType = condition;
+
+    // only approved ones if showApproval=true
+    if (showApproval === "true") {
+      filter.status = "Return Approved";
+    }
+
+    const spares = await ReturnSpare.find(filter)
+      .select("spareCode spareName brand returnQty returnDate status returnType")
+      .lean();
+
+    res.json(spares);
+  } catch (err) {
+    console.error("Error fetching spares:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
