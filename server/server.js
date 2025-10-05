@@ -535,7 +535,7 @@ app.post("/api/spares/return", async (req, res) => {
 // ✅ --- GET Return Spares for display ---
 app.get("/api/spares/return", async (req, res) => {
   try {
-    const { brand, condition, showApproval } = req.query;
+    const { brand, condition, showApproval, fromDate, toDate } = req.query;
     const filter = {};
 
     if (brand) filter.brand = brand;
@@ -544,32 +544,44 @@ app.get("/api/spares/return", async (req, res) => {
     // only approved ones if showApproval=true
     if (showApproval === "true") {
       filter.status = "Return Approved";
-    } else if (showApproval === "false") {
-      filter.status = "Return Initiated";
     }
 
+    // Optional date filter (for returnDate or spareDate)
+    if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
+      filter.returnDate = { $gte: start, $lte: end };
+    }
+
+    // Fetch return spares
     const spares = await ReturnSpare.find(filter)
       .select(
-        "spareCode spareName brand returnQty mslType spareDate returnDate status returnType mrp availableQty"
+        "spareCode spareName brand returnQty returnDate status returnType mslType mrp qty datespare availableQty"
       )
       .lean();
 
-    // 🔹 Calculate "noOfDays" dynamically
+    // Add calculated fields
     const today = new Date();
     const formatted = spares.map((s) => {
-      const spareDate = s.spareDate ? new Date(s.spareDate) : null;
+      const spareDate = s.datespare || s.returnDate;
       const noOfDays = spareDate
-        ? Math.floor((today - spareDate) / (1000 * 60 * 60 * 24))
+        ? Math.floor((today - new Date(spareDate)) / (1000 * 60 * 60 * 24))
         : null;
 
       return {
-        ...s,
-        spareDate: spareDate
-          ? spareDate.toISOString().split("T")[0]
-          : null,
-        noOfDays,
-        availableQty: s.availableQty || s.returnQty || 0,
+        _id: s._id,
+        brand: s.brand || "-",
+        spareCode: s.spareCode,
+        spareName: s.spareName,
+        qty: s.availableQty || s.qty || 0,
+        returnQty: s.returnQty || 0,
+        mslType: s.mslType || "Non-MSL",
         mrp: s.mrp || 0,
+        datespare: s.datespare || s.returnDate,
+        noOfDays,
+        status: s.status,
+        returnType: s.returnType,
       };
     });
 
@@ -579,6 +591,7 @@ app.get("/api/spares/return", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 // --- Approve / Reject Return Spare ---
