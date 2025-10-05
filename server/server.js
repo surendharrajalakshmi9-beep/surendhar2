@@ -481,11 +481,6 @@ app.post("/api/spares/return", async (req, res) => {
     if (returnType === "good") {
       for (const spare of selectedSpares) {
         const userQty = spare.returnQty || 0;
-
-        // ✅ Optionally delete from Spare collection
-        // await Spare.findOneAndDelete({ _id: spare._id });
-
-        // ✅ Save to ReturnSpare collection
         const returnDoc = new ReturnSpare({
           spareCode: spare.itemNo || "",
           spareName: spare.itemName || "",
@@ -496,11 +491,9 @@ app.post("/api/spares/return", async (req, res) => {
           status: "Return Initiated",
           returnType,
         });
-
         await returnDoc.save();
         results.push({ itemNo: spare.itemNo, success: true });
       }
-
       return res.json({ message: "Good return processed successfully", results });
     }
 
