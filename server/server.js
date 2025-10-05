@@ -532,6 +532,7 @@ app.post("/api/spares/return", async (req, res) => {
 
 
 // ✅ --- GET Return Spares for display ---
+// ✅ --- GET Return Spares for display ---
 app.get("/api/spares/return", async (req, res) => {
   try {
     const { brand, condition, showApproval } = req.query;
@@ -543,13 +544,36 @@ app.get("/api/spares/return", async (req, res) => {
     // only approved ones if showApproval=true
     if (showApproval === "true") {
       filter.status = "Return Approved";
+    } else if (showApproval === "false") {
+      filter.status = "Return Initiated";
     }
 
     const spares = await ReturnSpare.find(filter)
-      .select("spareCode spareName brand returnQty returnDate status returnType")
+      .select(
+        "spareCode spareName brand returnQty mslType spareDate returnDate status returnType mrp availableQty"
+      )
       .lean();
 
-    res.json(spares);
+    // 🔹 Calculate "noOfDays" dynamically
+    const today = new Date();
+    const formatted = spares.map((s) => {
+      const spareDate = s.spareDate ? new Date(s.spareDate) : null;
+      const noOfDays = spareDate
+        ? Math.floor((today - spareDate) / (1000 * 60 * 60 * 24))
+        : null;
+
+      return {
+        ...s,
+        spareDate: spareDate
+          ? spareDate.toISOString().split("T")[0]
+          : null,
+        noOfDays,
+        availableQty: s.availableQty || s.returnQty || 0,
+        mrp: s.mrp || 0,
+      };
+    });
+
+    res.json(formatted);
   } catch (err) {
     console.error("Error fetching spares:", err);
     res.status(500).json({ error: "Internal server error" });
