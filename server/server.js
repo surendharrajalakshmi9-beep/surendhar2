@@ -468,36 +468,45 @@ app.get("/api/technicians", async (req, res) => {
 // --- Return Selected Spares ---
 app.post("/api/spares/return", async (req, res) => {
   try {
-    const { selectedSpares, returnType } = req.body;
+    const { selectedSpares, returnType, brand, fromDate, toDate } = req.body;
 
-    if (!selectedSpares || selectedSpares.length === 0)
+    // Check if any spares are selected
+    if (!selectedSpares || selectedSpares.length === 0) {
       return res.status(400).json({ error: "No spares selected" });
+    }
 
     let results = [];
 
-    for (const spare of selectedSpares) {
-      const userQty = spare.returnQty || 0;
-      if (returnType === "good") {
-        // Remove from Spare collection
-        //await Spare.findOneAndDelete({ _id: spare._id });
-           // Insert] into ReturnSpare
-      const returnDoc = new ReturnSpare({
-        spareCode: spare.itemNo || "",
-        spareName: spare.itemName || "",
-        brand: spare.brand || "",
-        returnQty: userQty,
-        mslType: spare.mslType || "",
-        spareDate: spare.datespare || new Date(),
-        status: "Return Initiated",
-        returnType,
-      });
-      await returnDoc.save();
-      results.push({ itemNo: spare.itemNo, success: true });
+    // --- GOOD RETURNS ---
+    if (returnType === "good") {
+      for (const spare of selectedSpares) {
+        const userQty = spare.returnQty || 0;
+
+        // ✅ Optionally delete from Spare collection
+        // await Spare.findOneAndDelete({ _id: spare._id });
+
+        // ✅ Save to ReturnSpare collection
+        const returnDoc = new ReturnSpare({
+          spareCode: spare.itemNo || "",
+          spareName: spare.itemName || "",
+          brand: spare.brand || "",
+          returnQty: userQty,
+          mslType: spare.mslType || "",
+          spareDate: spare.datespare || new Date(),
+          status: "Return Initiated",
+          returnType,
+        });
+
+        await returnDoc.save();
+        results.push({ itemNo: spare.itemNo, success: true });
+      }
+
+      return res.json({ message: "Good return processed successfully", results });
     }
 
-    res.json({ message: "Return processed successfully", results });
-  }  else if (condition === "defective") {
-      query = { defectiveSubmitted: "yes" };
+    // --- DEFECTIVE RETURNS ---
+    else if (returnType === "defective") {
+      let query = { defectiveSubmitted: "yes" };
 
       if (fromDate && toDate) {
         query.completionDate = {
@@ -509,19 +518,26 @@ app.post("/api/spares/return", async (req, res) => {
       if (brand) query.brand = brand;
 
       console.log("Defective query:", query);
-      spares = await CallDetail.find(query)
+
+      const spares = await CallDetail.find(query)
         .select("brand spareCode spareName qty completionDate")
         .lean();
+
+      console.log("Final defective spares:", spares.length);
+      return res.json({ message: "Defective spares fetched successfully", spares });
     }
 
-    console.log("Final spares:", spares.length);
-    res.json(spares);
+    // --- UNKNOWN CONDITION ---
+    else {
+      return res.status(400).json({ error: "Invalid return type specified" });
+    }
 
   } catch (err) {
-    console.error("Error fetching return spares:", err);
+    console.error("Error processing return spares:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // --- Approve / Reject Return Spare ---
 app.put("/api/spares/approval/:id", async (req, res) => {
