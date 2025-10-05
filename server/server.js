@@ -532,66 +532,58 @@ app.post("/api/spares/return", async (req, res) => {
 
 
 // ✅ --- GET Return Spares for display ---
-// ✅ --- GET Return Spares for display ---
 app.get("/api/spares/return", async (req, res) => {
   try {
-    const { brand, condition, showApproval, fromDate, toDate } = req.query;
-    const filter = {};
+    const { brand, condition, showApproval } = req.query;
 
+    // Filter ReturnSpare first
+    const filter = {};
     if (brand) filter.brand = brand;
     if (condition) filter.returnType = condition;
+    if (showApproval === "true") filter.status = "Return Approved";
 
-    // only approved ones if showApproval=true
-    if (showApproval === "true") {
-      filter.status = "Return Approved";
-    }
+    const returnSpares = await ReturnSpare.find(filter).lean();
 
-    // Optional date filter (for returnDate or spareDate)
-    if (fromDate && toDate) {
-      const start = new Date(fromDate);
-      const end = new Date(toDate);
-      end.setHours(23, 59, 59, 999);
-      filter.returnDate = { $gte: start, $lte: end };
-    }
+    // Get all itemNos from returnSpares
+    const itemNos = returnSpares.map((r) => r.spareCode);
 
-    // Fetch return spares
-    const spares = await ReturnSpare.find(filter)
-      .select(
-        "spareCode spareName brand returnQty returnDate status returnType mslType mrp qty datespare availableQty"
-      )
+    // Fetch corresponding Spare documents
+    const spareData = await Spare.find({ itemNo: { $in: itemNos } })
+      .select("quantity datespare mrp itemNo")
       .lean();
 
-    // Add calculated fields
+    // Map Spare info to ReturnSpare
     const today = new Date();
-    const formatted = spares.map((s) => {
-      const spareDate = s.datespare || s.returnDate;
+    const mergedData = returnSpares.map((r) => {
+      const spare = spareData.find((s) => s.itemNo === r.spareCode) || {};
+
+      const spareDate = r.spareDate || spare.datespare;
       const noOfDays = spareDate
         ? Math.floor((today - new Date(spareDate)) / (1000 * 60 * 60 * 24))
-        : null;
+        : 0;
 
       return {
-        _id: s._id,
-        brand: s.brand || "-",
-        spareCode: s.spareCode,
-        spareName: s.spareName,
-        qty: s.availableQty || s.qty || 0,
-        returnQty: s.returnQty || 0,
-        mslType: s.mslType || "Non-MSL",
-        mrp: s.mrp || 0,
-        datespare: s.datespare || s.returnDate,
+        _id: r._id,
+        spareCode: r.spareCode,
+        spareName: r.spareName,
+        brand: r.brand,
+        returnQty: r.returnQty,
+        availableQty: spare.quantity || 0,  // ✅ now available quantity
+        mslType: r.mslType || spare.mslType || "Non-MSL",
+        mrp: spare.mrp || 0,
+        spareDate,
         noOfDays,
-        status: s.status,
-        returnType: s.returnType,
+        status: r.status,
+        returnType: r.returnType,
       };
     });
 
-    res.json(formatted);
+    res.json(mergedData);
   } catch (err) {
-    console.error("Error fetching spares:", err);
+    console.error("Error fetching return spares:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 
 // --- Approve / Reject Return Spare ---
