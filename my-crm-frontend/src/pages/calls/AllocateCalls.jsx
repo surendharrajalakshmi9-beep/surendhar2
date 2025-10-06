@@ -25,7 +25,7 @@ export default function AllocatedCalls() {
   const [totalCount, setTotalCount] = useState(0);
   const [callCount, setCallCount] = useState(0);
   const [technicianCount, setTechnicianCount] = useState(0);
-
+const [whatsAppPage, setWhatsAppPage] = useState(1);
 
 
   // ✅ Fetch brands from backend
@@ -128,6 +128,7 @@ useEffect(() => {
         ? prev.filter((c) => c !== callNo)
         : [...prev, callNo]
     );
+    setWhatsAppPage(1); // reset to first WhatsApp page
   };
 
   const handleAssign = async () => {
@@ -236,29 +237,29 @@ const fetchTechnicianCount = async (tech) => {
       selectedCalls.includes(c.callNo)
     );
 
-    const text = selectedData
-      .map((call) => {
-        const tatFormatted = assignedDate
-          ? new Date(assignedDate).toLocaleDateString("en-IN")
-          : "N/A";
+   if (selectedData.length === 0) return;
 
-        return `📞 *New Call Assigned*  
+    const currentCall = selectedData[whatsAppPage - 1] || selectedData[0];
+
+    const tatFormatted = assignedDate
+      ? new Date(assignedDate).toLocaleDateString("en-IN")
+      : "N/A";
+
+    const text = `📞 *New Call Assigned*  
 ---------------------------  
-📌 Call No: ${call.callNo}  
-👤 Customer: ${call.customerName}  
-📱 Phone: ${call.phoneNo || "N/A"}  
-🏠 Address: ${call.address}, ${call.pincode}  
-🛠 Product: ${call.product}, ${call.model}  
-⚡ Call Type: ${call.callSubtype || "-"}  
-❗ Problem: ${call.natureOfComplaint || "N/A"}  
+📌 Call No: ${currentCall.callNo}  
+👤 Customer: ${currentCall.customerName}  
+📱 Phone: ${currentCall.phoneNo || "N/A"}  
+🏠 Address: ${currentCall.address}, ${currentCall.pincode}  
+🛠 Product: ${currentCall.product}, ${currentCall.model}  
+⚡ Call Type: ${currentCall.callSubtype || "-"}  
+❗ Problem: ${currentCall.natureOfComplaint || "N/A"}  
 👨‍🔧 Technician: ${technician || "Not Assigned"}  
-⏰ Complete By: ${tatFormatted}  
+
 ---------------------------`;
-      })
-      .join("\n\n");
 
     setFormattedText(text);
-  }, [selectedCalls, calls, assignedDate, technician]);
+  }, [selectedCalls, calls, assignedDate, technician, whatsAppPage]);
 
   
    // Pagination logic
@@ -266,7 +267,7 @@ const fetchTechnicianCount = async (tech) => {
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = calls.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(calls.length / recordsPerPage);
-
+  const totalWhatsAppPages = selectedCalls.length;
   return (
     <div className="p-6 bg-[#f4f7fb] min-h-screen font-[Times_New_Roman] text-sm">
       <h2 className="text-xl font-semibold mb-4">Allocate Calls</h2>
@@ -478,24 +479,54 @@ const fetchTechnicianCount = async (tech) => {
         </div>
       )}
 
+{/* ✅ WhatsApp Message Preview (One Call Per Page) */}
+      {formattedText && (
+        <div className="mt-6">
+          <label className="block mb-2 font-semibold">
+            📋 WhatsApp Message ({whatsAppPage}/{totalWhatsAppPages})
+          </label>
 
-  {/* ✅ WhatsApp Message Preview */}
-{formattedText && (
-  <div className="mt-6">
-    <label className="block mb-2 font-semibold">
-      📋 WhatsApp Message (copy, edit & paste)
-    </label>
-    <textarea
-      value={formattedText}
-      onChange={(e) => setFormattedText(e.target.value)} // allow editing
-      className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
-    />
-    <p className="text-xs text-gray-500 mt-1">
-      You can edit / cut / copy this text and then paste in WhatsApp.
-    </p>
-  </div>
-)}
+          <textarea
+            value={formattedText}
+            onChange={(e) => setFormattedText(e.target.value)}
+            className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
+          />
 
+          {/* WhatsApp pagination */}
+          {totalWhatsAppPages > 1 && (
+            <div className="flex justify-center items-center mt-3 space-x-2">
+              <button
+                onClick={() => setWhatsAppPage((p) => Math.max(1, p - 1))}
+                disabled={whatsAppPage === 1}
+                className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <span className="text-sm">
+                Page {whatsAppPage} of {totalWhatsAppPages}
+              </span>
+              <button
+                onClick={() =>
+                  setWhatsAppPage((p) =>
+                    Math.min(totalWhatsAppPages, p + 1)
+                  )
+                }
+                disabled={whatsAppPage === totalWhatsAppPages}
+                className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            You can copy or edit this text and send via WhatsApp manually.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
   
       {/* Edit Modal */}
