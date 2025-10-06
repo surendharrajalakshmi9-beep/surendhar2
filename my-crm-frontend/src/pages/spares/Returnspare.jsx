@@ -234,7 +234,7 @@ const Returnspare = () => {
                 <th className="border p-2">Spare Code</th>
                 <th className="border p-2">Spare Name</th>
                 <th className="border p-2">Available Qty</th>
-                {condition === "good" && !showApproval && <th className="border p-2">Return Qty</th>}
+                {condition === "good" && <th className="border p-2">Return Qty</th>}
                 <th className="border p-2">Spare Date</th>
                 <th className="border p-2">No. of Days</th>
                 <th className="border p-2">MRP</th>
