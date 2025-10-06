@@ -85,7 +85,15 @@ const [whatsAppPage, setWhatsAppPage] = useState(1);
   }
 };
 
+// Pagination for WhatsApp
+const [whatsAppPage, setWhatsAppPage] = useState(1);
+const [totalWhatsAppPages, setTotalWhatsAppPages] = useState(1);
 
+// Whenever selected calls change, reset pagination
+useEffect(() => {
+  setWhatsAppPage(1);
+  setTotalWhatsAppPages(selectedCalls.length);
+}, [selectedCalls]);
 
 
 const fetchCallCount = async () => {
@@ -226,26 +234,26 @@ const fetchTechnicianCount = async (tech) => {
 
 
 
-// ✅ Generate WhatsApp formatted text
-  useEffect(() => {
-    if (selectedCalls.length === 0) {
-      setFormattedText("");
-      return;
-    }
+// ✅ Generate WhatsApp formatted text (One Call per page)
+useEffect(() => {
+  if (selectedCalls.length === 0) {
+    setFormattedText("");
+    return;
+  }
 
-    const selectedData = calls.filter((c) =>
-      selectedCalls.includes(c.callNo)
-    );
+  const selectedData = calls.filter((c) =>
+    selectedCalls.includes(c.callNo)
+  );
 
-   if (selectedData.length === 0) return;
+  if (selectedData.length === 0) return;
 
-    const currentCall = selectedData[whatsAppPage - 1] || selectedData[0];
+  const currentCall = selectedData[whatsAppPage - 1] || selectedData[0];
 
-    const tatFormatted = assignedDate
-      ? new Date(assignedDate).toLocaleDateString("en-IN")
-      : "N/A";
+  const tatFormatted = assignedDate
+    ? new Date(assignedDate).toLocaleDateString("en-IN")
+    : "N/A";
 
-    const text = `📞 *New Call Assigned*  
+  const text = `📞 *New Call Assigned*  
 ---------------------------  
 📌 Call No: ${currentCall.callNo}  
 👤 Customer: ${currentCall.customerName}  
@@ -255,11 +263,12 @@ const fetchTechnicianCount = async (tech) => {
 ⚡ Call Type: ${currentCall.callSubtype || "-"}  
 ❗ Problem: ${currentCall.natureOfComplaint || "N/A"}  
 👨‍🔧 Technician: ${technician || "Not Assigned"}  
-
+⏰ Complete By: ${tatFormatted}  
 ---------------------------`;
 
-    setFormattedText(text);
-  }, [selectedCalls, calls, assignedDate, technician, whatsAppPage]);
+  setFormattedText(text);
+}, [selectedCalls, calls, assignedDate, technician, whatsAppPage]);
+
 
   
    // Pagination logic
@@ -480,50 +489,59 @@ const fetchTechnicianCount = async (tech) => {
       )}
 
 {/* ✅ WhatsApp Message Preview (One Call Per Page) */}
-      {formattedText && (
-        <div className="mt-6">
-          <label className="block mb-2 font-semibold">
-            📋 WhatsApp Message ({whatsAppPage}/{totalWhatsAppPages})
-          </label>
+{formattedText && (
+  <div className="mt-6">
+    <label className="block mb-2 font-semibold">
+      📋 WhatsApp Message ({whatsAppPage}/{totalWhatsAppPages})
+    </label>
 
-          <textarea
-            value={formattedText}
-            onChange={(e) => setFormattedText(e.target.value)}
-            className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
-          />
+    <textarea
+      value={formattedText}
+      onChange={(e) => {
+        const value = e.target.value;
+        setFormattedText(value);
 
-          {/* WhatsApp pagination */}
-          {totalWhatsAppPages > 1 && (
-            <div className="flex justify-center items-center mt-3 space-x-2">
-              <button
-                onClick={() => setWhatsAppPage((p) => Math.max(1, p - 1))}
-                disabled={whatsAppPage === 1}
-                className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-              >
-                Prev
-              </button>
-              <span className="text-sm">
-                Page {whatsAppPage} of {totalWhatsAppPages}
-              </span>
-              <button
-                onClick={() =>
-                  setWhatsAppPage((p) =>
-                    Math.min(totalWhatsAppPages, p + 1)
-                  )
-                }
-                disabled={whatsAppPage === totalWhatsAppPages}
-                className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          )}
+        // If user clears (cuts) the text completely
+        if (value.trim() === "" && whatsAppPage < totalWhatsAppPages) {
+          setTimeout(() => {
+            setWhatsAppPage((p) => Math.min(totalWhatsAppPages, p + 1));
+          }, 100); // small delay to ensure UI update
+        }
+      }}
+      className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
+    />
 
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            You can copy or edit this text and send via WhatsApp manually.
-          </p>
-        </div>
-      )}
+    {/* WhatsApp pagination controls */}
+    {totalWhatsAppPages > 1 && (
+      <div className="flex justify-center items-center mt-3 space-x-2">
+        <button
+          onClick={() => setWhatsAppPage((p) => Math.max(1, p - 1))}
+          disabled={whatsAppPage === 1}
+          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <span className="text-sm">
+          Page {whatsAppPage} of {totalWhatsAppPages}
+        </span>
+        <button
+          onClick={() =>
+            setWhatsAppPage((p) => Math.min(totalWhatsAppPages, p + 1))
+          }
+          disabled={whatsAppPage === totalWhatsAppPages}
+          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    )}
+
+    <p className="text-xs text-gray-500 mt-2 text-center">
+      ✂️ After you copy or cut this message (Ctrl+A → Ctrl+X), the next call will auto-load.
+    </p>
+  </div>
+)}
+
     
   
 
