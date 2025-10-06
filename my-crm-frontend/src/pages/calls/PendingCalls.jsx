@@ -19,6 +19,10 @@ export default function PendingCalls() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
+  const [formattedText, setFormattedText] = useState("");
+  const [whatsAppPage, setWhatsAppPage] = useState(1);
+  const [totalWhatsAppPages, setTotalWhatsAppPages] = useState(0);
+
 
   // Fetch brands
   useEffect(() => {
@@ -81,6 +85,46 @@ export default function PendingCalls() {
     );
   };
 
+  // ✅ Generate WhatsApp formatted text (one call per page)
+  useEffect(() => {
+    if (selectedCalls.length === 0) {
+      setFormattedText("");
+      setTotalWhatsAppPages(0);
+      return;
+    }
+
+    const selectedData = calls.filter((c) =>
+      selectedCalls.includes(c.callNo)
+    );
+
+    if (selectedData.length === 0) return;
+
+    const totalPages = selectedData.length;
+    setTotalWhatsAppPages(totalPages);
+
+    // Make sure page is valid
+    if (whatsAppPage > totalPages) setWhatsAppPage(1);
+
+    const currentCall = selectedData[whatsAppPage - 1] || selectedData[0];
+
+    const text = `📞 *Pending Call Details*  
+---------------------------  
+📌 Call No: ${currentCall.callNo}  
+🏷 Brand: ${currentCall.brand || "-"}  
+👤 Customer: ${currentCall.customerName || "-"}  
+📱 Phone: ${currentCall.phoneNo || "N/A"}  
+🏠 Address: ${currentCall.address || "-"}, ${currentCall.pincode || ""}  
+🛠 Product: ${currentCall.product || "-"} (${currentCall.model || "-"})  
+⚡ Call Type: ${currentCall.type || "-"}  
+❗ Problem: ${currentCall.natureOfComplaint || "N/A"}  
+👨‍🔧 Technician: ${currentCall.technician || "Not Assigned"}  
+📅 Status: ${currentCall.status || "N/A"}  
+---------------------------`;
+
+    setFormattedText(text);
+  }, [selectedCalls, calls, whatsAppPage]);
+
+  
   const handleSubmit = async () => {
     if (!status) return toast.error("Select status");
     if (selectedCalls.length === 0) return toast.error("Select calls");
@@ -305,6 +349,53 @@ export default function PendingCalls() {
         </div>
       )}
 
+      {/* ✅ WhatsApp Preview Section */}
+      {formattedText && (
+        <div className="mt-8">
+          <label className="block mb-2 font-semibold">
+            📋 WhatsApp Message Preview ({whatsAppPage}/{totalWhatsAppPages})
+          </label>
+
+          <textarea
+            value={formattedText}
+            onChange={(e) => setFormattedText(e.target.value)}
+            className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
+          />
+
+          {/* WhatsApp Pagination */}
+          {totalWhatsAppPages > 1 && (
+            <div className="flex justify-center items-center mt-3 space-x-2">
+              <button
+                onClick={() => setWhatsAppPage((p) => Math.max(1, p - 1))}
+                disabled={whatsAppPage === 1}
+                className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+
+              <span className="text-sm">
+                Page {whatsAppPage} of {totalWhatsAppPages}
+              </span>
+
+              <button
+                onClick={() =>
+                  setWhatsAppPage((p) => Math.min(totalWhatsAppPages, p + 1))
+                }
+                disabled={whatsAppPage === totalWhatsAppPages}
+                className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            You can copy or edit this text and send via WhatsApp manually.
+          </p>
+        </div>
+      )}
+
+      
       {/* Status Update Section */}
       <div className="mt-4 space-y-4">
         <div>
@@ -324,17 +415,63 @@ export default function PendingCalls() {
             <option value="cancel">Cancel</option>
           </select>
         </div>
+{status === "completed" && (
+  <div className="space-y-3">
+    {/* ✅ Completion Date */}
+    <div>
+      <label className="block font-medium mb-1">Completion Date & Time</label>
+      <input
+        type="datetime-local"
+        className="border p-2 rounded w-full"
+        onChange={(e) =>
+          setExtraFields({
+            ...extraFields,
+            completionDate: e.target.value,
+          })
+        }
+      />
+    </div>
 
-        {/* Extra fields */}
-        {status === "completed" && (
-          <input
-            type="datetime-local"
-            className="border p-2 rounded w-full"
-            onChange={(e) =>
-              setExtraFields({ ...extraFields, completionDate: e.target.value })
-            }
-          />
-        )}
+    {/* ✅ Warranty Status */}
+    <div>
+      <label className="block font-medium mb-1">Warranty Status</label>
+      <select
+        className="border p-2 rounded w-full"
+        onChange={(e) =>
+          setExtraFields({
+            ...extraFields,
+            warrantyStatus: e.target.value,
+          })
+        }
+      >
+        <option value="">Select Warranty Type</option>
+        <option value="Warranty">Warranty</option>
+        <option value="Out of Warranty">Out of Warranty</option>
+      </select>
+    </div>
+
+    {/* ✅ Price Collected (only if Out of Warranty) */}
+    {extraFields.warrantyStatus === "Out of Warranty" && (
+      <div>
+        <label className="block font-medium mb-1">
+          Price Collected from Customer (₹)
+        </label>
+        <input
+          type="number"
+          className="border p-2 rounded w-full"
+          placeholder="Enter amount"
+          onChange={(e) =>
+            setExtraFields({
+              ...extraFields,
+              owamtReceived: e.target.value,
+            })
+          }
+        />
+      </div>
+    )}
+  </div>
+)}
+
         {status === "appointment" && (
           <input
             type="datetime-local"
