@@ -306,6 +306,6 @@ g
       )}
     </div>
   );
-};
+}
 
 export default Returnspare;
