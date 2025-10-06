@@ -115,21 +115,37 @@ const Returnspare = () => {
     setEditReturnType((prev) => ({ ...prev, [id]: value }));
   };
 
-  // 🔹 Handle Approve / Reject in batch
+  // 🔹 Batch approve/reject
   const handleApproveReject = async (approved) => {
     if (selected.length === 0) {
       alert("Please select at least one spare.");
       return;
     }
+
+    try {
+      for (const id of selected) {
+        if (approved) {
+          await axios.delete(`/api/spares/${id}`);
+        } else {
+          await axios.put(`/api/spares/${id}`, { status: "" });
+        }
+      }
+      alert(approved ? "Approved successfully." : "Rejected successfully.");
+      fetchSpares();
+    } catch (err) {
+      console.error("Error processing approval:", err);
+      alert("Failed to process approval.");
+    }
+  };
   const handleApproval = async (spareId, approved) => {
     try {
       if (approved) {
         // ✅ Delete from Spare collection
-        await axios.delete(`/api/spares/${spareId}`);
+        await axios.delete(`/api/spares/approval/${spareId}`);
         setSpares((prev) => prev.filter((s) => s._id !== spareId));
       } else {
         // ❌ Reject: update status back to "" or any custom logic
-        await axios.put(`/api/spares/${spareId}`, { status: "" });
+        await axios.put(`//api/spares/approval/${spareId}`, { status: "" });
         setSpares((pregv) =>
           prev.map((s) => (s._id === spareId ? { ...s, status: "" } : s))
         );
@@ -231,7 +247,7 @@ const Returnspare = () => {
                 const dateField = s.datespare || s.completionDate;
                 const formattedDate = dateField ? new Date(dateField).toLocaleDateString() : "-";
                 const daysDiff = dateField ? Math.floor((today - new Date(dateField)) / (1000 * 60 * 60 * 24)) : "-";
-g
+
                 return (
                   <tr key={idx}>
                     <td className="border p-2 text-center">
@@ -285,7 +301,7 @@ g
             </div>
           )}
         {showApproval && (
-          <div className="mt-4 flex space-x-4">g
+          <div className="mt-4 flex space-x-4">
             <button
               onClick={() => handleApproveReject(true)}
               className="bg-green-600 text-white px-4 py-2 rounded"
@@ -306,6 +322,6 @@ g
       )}
     </div>
   );
-}
+};
 
 export default Returnspare;
