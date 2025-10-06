@@ -86,7 +86,7 @@ const [whatsAppPage, setWhatsAppPage] = useState(1);
 };
 
 // Pagination for WhatsApp
-const [whatsAppPage, setWhatsAppPage] = useState(1);
+
 const [totalWhatsAppPages, setTotalWhatsAppPages] = useState(1);
 
 // Whenever selected calls change, reset pagination
@@ -276,7 +276,7 @@ useEffect(() => {
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = calls.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(calls.length / recordsPerPage);
-  const totalWhatsAppPages = selectedCalls.length;
+  //const totalWhatsAppPages = selectedCalls.length;
   return (
     <div className="p-6 bg-[#f4f7fb] min-h-screen font-[Times_New_Roman] text-sm">
       <h2 className="text-xl font-semibold mb-4">Allocate Calls</h2>
