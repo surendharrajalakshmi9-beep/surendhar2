@@ -466,43 +466,20 @@ app.get("/api/technicians", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch technicians" });
   }
 });
-// --- Return Selected Spares ---
-app.post("/api/spares/return", async (req, res) => {
+// ✅ --- GET Return Spares for Display (Good + Defective) ---
+app.get("/api/spares/return", async (req, res) => {
   try {
-    const { selectedSpares, returnType, brand, fromDate, toDate } = req.body;
+    const { brand, fromDate, toDate, mslStatus, condition, showApproval } = req.query;
 
-    if (!selectedSpares || selectedSpares.length === 0) {
-      return res.status(400).json({ error: "No spares selected" });
-    }
+    // Default filter
+    let filter = {};
 
-    let results = [];
-
-    // --- GOOD RETURNS ---
-    if (returnType === "good") {
-      for (const spare of selectedSpares) {
-        const userQty = spare.returnQty || 0;
-
-        const returnDoc = new ReturnSpare({
-          spareCode: spare.itemNo || "",
-          spareName: spare.itemName || "",
-          brand: spare.brand || "",
-          returnQty: userQty,
-          mslType: spare.mslType || "",
-          spareDate: spare.datespare || new Date(),
-          status: "Return Initiated",
-          returnType,
-        });
-
-        await returnDoc.save();
-        results.push({ itemNo: spare.itemNo, success: true });
-      }
-
-      return res.json({ message: "Good return processed successfully", results });
-    }
-
-    // --- DEFECTIVE RETURNS ---
-    else if (returnType === "defective") {
+    // 🔹 Check for return type
+    if (condition === "defective") {
+      // 🔸 DEFECTIVE SPARES from CallDetail
       let query = { defectiveSubmitted: "yes" };
+
+      if (brand) query.brand = brand;
 
       if (fromDate && toDate) {
         query.completionDate = {
@@ -511,43 +488,34 @@ app.post("/api/spares/return", async (req, res) => {
         };
       }
 
-      if (brand) query.brand = brand;
-
       const spares = await CallDetail.find(query)
         .select("brand spareCode spareName qty completionDate")
         .lean();
 
-      return res.json({ message: "Defective spares fetched successfully", spares });
+      const today = new Date();
+      const processed = spares.map((s) => {
+        const completion = s.completionDate ? new Date(s.completionDate) : null;
+        const noOfDays = completion
+          ? Math.floor((today - completion) / (1000 * 60 * 60 * 24))
+          : 0;
+
+        return {
+          ...s,
+          returnType: "Defective",
+          noOfDays,
+        };
+      });
+
+      return res.json({
+        message: "Defective spares fetched successfully",
+        spares: processed,
+      });
     }
 
-    // --- UNKNOWN CONDITION ---
-    else {
-      return res.status(400).json({ error: "Invalid return type specified" });
-    }
-
-  } catch (err) {
-    console.error("Error processing return spares:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-
-
-// ✅ --- GET Return Spares for display ---
-// --- GET Return Spares for Display ---
-app.get("/api/spares/return", async (req, res) => {
-  try {
-    const { brand, fromDate, toDate, mslStatus, condition, showApproval } = req.query;
-
-    let filter = {};
-
-    // 🔹 Filter by Brand
+    // 🔹 GOOD SPARES from Spare model
     if (brand) filter.brand = brand;
-
-    // 🔹 MSL Filter
     if (mslStatus) filter.mslType = mslStatus;
 
-    // 🔹 Date Range
     if (fromDate && toDate) {
       filter.datespare = {
         $gte: new Date(fromDate),
@@ -555,16 +523,14 @@ app.get("/api/spares/return", async (req, res) => {
       };
     }
 
-    // 🔹 Status condition
     if (showApproval === "true") {
-      filter.status = "Return Initiated"; // Show only items waiting for approval
+      filter.status = "Return Initiated";
     } else {
-      filter.status = { $ne: "Return Initiated" }; // Exclude initiated ones
+      filter.status = { $ne: "Return Initiated" };
     }
 
     const spares = await Spare.find(filter).lean();
 
-    // 🔹 Compute number of days from spare date
     const today = new Date();
     const processed = spares.map((s) => {
       const spareDate = s.datespare ? new Date(s.datespare) : null;
@@ -574,11 +540,15 @@ app.get("/api/spares/return", async (req, res) => {
 
       return {
         ...s,
+        returnType: "Good",
         noOfDays,
       };
     });
 
-    res.json(processed);
+    res.json({
+      message: "Good return spares fetched successfully",
+      spares: processed,
+    });
   } catch (err) {
     console.error("Error fetching spares:", err);
     res.status(500).json({ error: "Internal server error" });
