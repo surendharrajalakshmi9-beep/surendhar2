@@ -111,6 +111,16 @@ const Returnspare = () => {
     }
   };
 
+   const handleReturnTypeChange = (id, value) => {
+    setEditReturnType((prev) => ({ ...prev, [id]: value }));
+  };
+
+  // 🔹 Handle Approve / Reject in batch
+  const handleApproveReject = async (approved) => {
+    if (selected.length === 0) {
+      alert("Please select at least one spare.");
+      return;
+    }
   const handleApproval = async (spareId, approved) => {
     try {
       if (approved) {
@@ -120,7 +130,7 @@ const Returnspare = () => {
       } else {
         // ❌ Reject: update status back to "" or any custom logic
         await axios.put(`/api/spares/${spareId}`, { status: "" });
-        setSpares((prev) =>
+        setSpares((pregv) =>
           prev.map((s) => (s._id === spareId ? { ...s, status: "" } : s))
         );
       }
@@ -137,7 +147,7 @@ const Returnspare = () => {
       return {
         "Spare Code": s.spareCode || s.itemNo,
         "Spare Name": s.spareName || s.itemName,
-        "Available Qty": s.qty || s.quantity,
+        "Available Qty": s.quantity || s.availableQty,
         "Return Qty": returnQty,
         Amount: amount.toFixed(2),
       };
@@ -212,7 +222,7 @@ const Returnspare = () => {
                 <th className="border p-2">Spare Date</th>
                 <th className="border p-2">No. of Days</th>
                 <th className="border p-2">MRP</th>
-                {showApproval && <th className="border p-2">Actions</th>}
+              
               </tr>
             </thead>
             <tbody>
@@ -221,30 +231,30 @@ const Returnspare = () => {
                 const dateField = s.datespare || s.completionDate;
                 const formattedDate = dateField ? new Date(dateField).toLocaleDateString() : "-";
                 const daysDiff = dateField ? Math.floor((today - new Date(dateField)) / (1000 * 60 * 60 * 24)) : "-";
-
+g
                 return (
                   <tr key={idx}>
                     <td className="border p-2 text-center">
-                      {!showApproval && (
+                      
                         <input
                           type="checkbox"
                           checked={selected.includes(s._id)}
                           onChange={() => handleSelect(s._id)}
                         />
-                      )}
+                      
                     </td>
                     <td className="border p-2">{s.brand}</td>
                     <td className="border p-2">{s.spareCode || s.itemNo}</td>
                     <td className="border p-2">{s.spareName || s.itemName}</td>
-                    <td className="border p-2">{s.qty || s.quantity}</td>
-                    {!showApproval && condition === "good" && (
+                    <td className="border p-2">{s.quantity || s.availableQty}</td>
+                    {condition === "good" && (
                       <td className="border p-2">
                         <input
                           type="number"
                           min="1"
-                          max={s.qty || s.quantity}
+                          max={s.quantity || s.availableQty}
                           value={editQty[s._id] || ""}
-                          onChange={(e) => handleQtyChange(s._id, e.target.value, s.qty || s.quantity)}
+                          onChange={(e) => handleQtyChange(s._id, e.target.value, s.quantity || s.availableQty)}
                           className="border p-1 rounded w-20"
                         />
                       </td>
@@ -252,12 +262,7 @@ const Returnspare = () => {
                     <td className="border p-2">{formattedDate}</td>
                     <td className="border p-2 text-center">{daysDiff}</td>
                     <td className="border p-2">{s.mrp || 0}</td>
-                    {showApproval && (
-                      <td className="border p-2 space-x-2">
-                        <button onClick={() => handleApproval(s._id, true)} className="bg-green-500 text-white px-2 py-1 rounded">Approve</button>
-                        <button onClick={() => handleApproval(s._id, false)} className="bg-red-500 text-white px-2 py-1 rounded">Reject</button>
-                      </td>
-                    )}
+                   
                   </tr>
                 );
               })}
@@ -279,6 +284,22 @@ const Returnspare = () => {
               </button>
             </div>
           )}
+        {showApproval && (
+          <div className="mt-4 flex space-x-4">g
+            <button
+              onClick={() => handleApproveReject(true)}
+              className="bg-green-600 text-white px-4 py-2 rounded"
+            >
+              Approve & Return
+            </button>
+            <button
+              onClick={() => handleApproveReject(false)}
+              className="bg-red-600 text-white px-4 py-2 rounded"
+            >
+              Reject
+            </button>
+          </div>
+           )}
         </>
       ) : (
         <p>No records found</p>
