@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import moment from "moment";
 import * as XLSX from "xlsx";
 
 const Returnspare = () => {
@@ -7,36 +8,37 @@ const Returnspare = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [mslStatus, setMslStatus] = useState("");
+  const [condition, setCondition] = useState("");
   const [spares, setSpares] = useState([]);
-  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selected, setSelected] = useState([]);
   const [editQty, setEditQty] = useState({});
-  const [editReturnType, setEditReturnType] = useState({});
+  const [brands, setBrands] = useState([]);
+  const [showApproval, setShowApproval] = useState(false); // ✅ Approval toggle
   const recordsPerPage = 5;
   const totalPages = Math.ceil(spares.length / recordsPerPage);
 
-  // 🔹 Fetch all brands
+  // Fetch brands
   useEffect(() => {
     const fetchBrands = async () => {
       try {
         const res = await fetch("/api/brands");
         const data = await res.json();
         setBrands(Array.isArray(data) ? data : data.data || []);
-      } catch (err) {
-        console.error("Failed to fetch brands", err);
+      } catch {
+        console.error("Failed to fetch brands");
       }
     };
     fetchBrands();
   }, []);
 
-  // 🔹 Load spares from Spare collection
+  // Fetch spares
   const fetchSpares = async () => {
     setLoading(true);
     try {
       const res = await axios.get("/api/spares/return", {
-        params: { brand, fromDate, toDate, mslStatus },
+        params: { brand, fromDate, toDate, mslStatus, condition, showApproval },
       });
       const sparesData = Array.isArray(res.data)
         ? res.data
@@ -46,7 +48,7 @@ const Returnspare = () => {
       setSpares(sparesData);
       setSelected([]);
       setEditQty({});
-      setEditReturnType({});
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching spares:", error);
       setSpares([]);
@@ -62,9 +64,7 @@ const Returnspare = () => {
         currentPage * recordsPerPage
       );
       setSelected(pageSpares.map((s) => s._id));
-    } else {
-      setSelected([]);
-    }
+    } else setSelected([]);
   };
 
   const handleSelect = (id) => {
@@ -76,75 +76,78 @@ const Returnspare = () => {
   const handleQtyChange = (id, value, maxQty) => {
     const num = parseInt(value, 10);
     if (isNaN(num) || num < 1) return setEditQty((prev) => ({ ...prev, [id]: "" }));
-    if (num > maxQty) {
-      alert("Quantity cannot exceed available stock");
-      return;
-    }
+    if (num > maxQty) return alert("Quantity cannot exceed available stock");
     setEditQty((prev) => ({ ...prev, [id]: num }));
   };
 
-  const handleReturnTypeChange = (id, value) => {
-    setEditReturnType((prev) => ({ ...prev, [id]: value }));
-  };
-
-  // 🔹 Handle Approve / Reject in batch
-  const handleApproveReject = async (approved) => {
+  const handleReturn = async () => {
     if (selected.length === 0) {
-      alert("Please select at least one spare.");
+      alert("Please select at least one spare to return.");
       return;
     }
 
     const selectedSpares = spares.filter((s) => selected.includes(s._id));
+    const payload = selectedSpares.map((s) => ({
+      ...s,
+      returnQty: condition === "good" ? editQty[s._id] || 0 : s.qty || s.quantity,
+    }));
 
     try {
-      if (approved) {
-        // Create ReturnSpare documents (aligned with returnSpareSchema)
-        const payload = selectedSpares.map((s) => ({
-          spareCode: s.itemNo,
-          spareName: s.itemName,
-          brand: s.brand,
-          returnQty: editQty[s._id] || s.quantity,
-          mslType: s.mslType,
-          spareDate: s.datespare,
-          returnType: editReturnType[s._id] || "good",
-        }));
+      await axios.post("/api/spares/return", {
+        selectedSpares: payload,
+        returnType: condition,
+      });
 
-        await axios.post("/api/returnspares", { data: payload });
-
-        alert("Selected spares returned successfully.");
-        exportExcel(payload);
-
-        // Optionally remove returned spares from Spare stock
+      alert("Return initiated successfully.");
+      if (condition === "good") {
         setSpares((prev) => prev.filter((s) => !selected.includes(s._id)));
-      } else {
-        alert("Selected spares rejected.");
       }
-
       setSelected([]);
       setEditQty({});
-      setEditReturnType({});
+      exportExcel(selectedSpares);
     } catch (error) {
-      console.error("Error processing return:", error);
-      alert("Operation failed.");
+      console.error("Error initiating return:", error);
+      alert("Error while initiating return.");
+    }
+  };
+
+  const handleApproval = async (spareId, approved) => {
+    try {
+      if (approved) {
+        // ✅ Delete from Spare collection
+        await axios.delete(`/api/spares/${spareId}`);
+        setSpares((prev) => prev.filter((s) => s._id !== spareId));
+      } else {
+        // ❌ Reject: update status back to "" or any custom logic
+        await axios.put(`/api/spares/${spareId}`, { status: "" });
+        setSpares((prev) =>
+          prev.map((s) => (s._id === spareId ? { ...s, status: "" } : s))
+        );
+      }
+    } catch (err) {
+      console.error("Error processing approval:", err);
+      alert("Failed to process approval.");
     }
   };
 
   const exportExcel = (data) => {
-    const formatted = data.map((s) => ({
-      "Spare Code": s.spareCode,
-      "Spare Name": s.spareName,
-      Brand: s.brand,
-      "Return Qty": s.returnQty,
-      "Return Type": s.returnType,
-      "MSL Type": s.mslType,
-      "Spare Date": s.spareDate ? new Date(s.spareDate).toLocaleDateString() : "",
-    }));
+    const formattedData = data.map((s) => {
+      const returnQty = condition === "good" ? editQty[s._id] || 0 : s.qty || s.quantity;
+      const amount = returnQty * (s.mrp || 0);
+      return {
+        "Spare Code": s.spareCode || s.itemNo,
+        "Spare Name": s.spareName || s.itemName,
+        "Available Qty": s.qty || s.quantity,
+        "Return Qty": returnQty,
+        Amount: amount.toFixed(2),
+      };
+    });
 
-    const ws = XLSX.utils.json_to_sheet(formatted);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "ReturnedSpares");
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "ReturnedSpares");
     XLSX.writeFile(
-      wb,
+      workbook,
       `ReturnedSpares_${brand || "All"}_${new Date().toISOString()}.xlsx`
     );
   };
@@ -159,9 +162,9 @@ const Returnspare = () => {
       <h2 className="text-lg font-bold mb-4">Return Spares</h2>
 
       {/* Filters */}
-      <div className="grid grid-cols-6 gap-4 mb-4">
+      <div className="grid grid-cols-7 gap-4 mb-4">
         <select value={brand} onChange={(e) => setBrand(e.target.value)} className="border rounded p-2 w-full">
-          <option value="">All Brands</option>
+          <option value="">All</option>
           {brands.map((b) => (
             <option key={b._id} value={b.name}>{b.name}</option>
           ))}
@@ -175,9 +178,21 @@ const Returnspare = () => {
           <option value="Non-Msl">Non-MSL</option>
         </select>
 
-        <button onClick={fetchSpares} className="bg-blue-500 text-white px-4 py-2 rounded">
-          Load
-        </button>
+        <select value={condition} onChange={(e) => setCondition(e.target.value)} className="border p-2 rounded">
+          <option value="">Select</option>
+          <option value="good">Good</option>
+          <option value="defective">Defective</option>
+        </select>
+
+        {/* ✅ Show Approval checkbox only for good condition */}
+        {condition === "good" && (
+          <label className="flex items-center space-x-2">
+            <input type="checkbox" checked={showApproval} onChange={() => setShowApproval(!showApproval)} />
+            <span>Show Approval Process</span>
+          </label>
+        )}
+
+        <button onClick={fetchSpares} className="bg-blue-500 text-white px-4 py-2 rounded">Load</button>
       </div>
 
       {/* Table */}
@@ -188,108 +203,82 @@ const Returnspare = () => {
           <table className="w-full border">
             <thead>
               <tr className="bg-gray-200">
-                <th className="border p-2 text-center">
-                  <input
-                    type="checkbox"
-                    onChange={handleSelectAll}
-                    checked={
-                      selected.length ===
-                      pageSpares.filter((s) => s._id).length &&
-                      selected.length > 0
-                    }
-                  />
-                </th>
+                <th className="border p-2">Select</th>
                 <th className="border p-2">Brand</th>
                 <th className="border p-2">Spare Code</th>
                 <th className="border p-2">Spare Name</th>
                 <th className="border p-2">Available Qty</th>
-                <th className="border p-2">Return Qty</th>
-                <th className="border p-2">Return Type</th>
+                {condition === "good" && !showApproval && <th className="border p-2">Return Qty</th>}
                 <th className="border p-2">Spare Date</th>
-                <th className="border p-2">MSL Type</th>
+                <th className="border p-2">No. of Days</th>
+                <th className="border p-2">MRP</th>
+                {showApproval && <th className="border p-2">Actions</th>}
               </tr>
             </thead>
             <tbody>
-              {pageSpares.map((s) => (
-                <tr key={s._id}>
-                  <td className="border p-2 text-center">
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(s._id)}
-                      onChange={() => handleSelect(s._id)}
-                    />
-                  </td>
-                  <td className="border p-2">{s.brand}</td>
-                  <td className="border p-2">{s.itemNo}</td>
-                  <td className="border p-2">{s.itemName}</td>
-                  <td className="border p-2 text-center">{s.quantity}</td>
-                  <td className="border p-2 text-center">
-                    <input
-                      type="number"
-                      min="1"
-                      max={s.quantity}
-                      value={editQty[s._id] || ""}
-                      onChange={(e) =>
-                        handleQtyChange(s._id, e.target.value, s.quantity)
-                      }
-                      className="border p-1 rounded w-20 text-center"
-                    />
-                  </td>
-                  <td className="border p-2 text-center">
-                    <select
-                      value={editReturnType[s._id] || "good"}
-                      onChange={(e) =>
-                        handleReturnTypeChange(s._id, e.target.value)
-                      }
-                      className="border rounded p-1"
-                    >
-                      <option value="good">Good</option>
-                      <option value="defective">Defective</option>
-                    </select>
-                  </td>
-                  <td className="border p-2">
-                    {s.datespare ? new Date(s.datespare).toLocaleDateString() : "-"}
-                  </td>
-                  <td className="border p-2 text-center">{s.mslType}</td>
-                </tr>
-              ))}
+              {pageSpares.map((s, idx) => {
+                const today = new Date();
+                const dateField = s.datespare || s.completionDate;
+                const formattedDate = dateField ? new Date(dateField).toLocaleDateString() : "-";
+                const daysDiff = dateField ? Math.floor((today - new Date(dateField)) / (1000 * 60 * 60 * 24)) : "-";
+
+                return (
+                  <tr key={idx}>
+                    <td className="border p-2 text-center">
+                      {!showApproval && (
+                        <input
+                          type="checkbox"
+                          checked={selected.includes(s._id)}
+                          onChange={() => handleSelect(s._id)}
+                        />
+                      )}
+                    </td>
+                    <td className="border p-2">{s.brand}</td>
+                    <td className="border p-2">{s.spareCode || s.itemNo}</td>
+                    <td className="border p-2">{s.spareName || s.itemName}</td>
+                    <td className="border p-2">{s.qty || s.quantity}</td>
+                    {!showApproval && condition === "good" && (
+                      <td className="border p-2">
+                        <input
+                          type="number"
+                          min="1"
+                          max={s.qty || s.quantity}
+                          value={editQty[s._id] || ""}
+                          onChange={(e) => handleQtyChange(s._id, e.target.value, s.qty || s.quantity)}
+                          className="border p-1 rounded w-20"
+                        />
+                      </td>
+                    )}
+                    <td className="border p-2">{formattedDate}</td>
+                    <td className="border p-2 text-center">{daysDiff}</td>
+                    <td className="border p-2">{s.mrp || 0}</td>
+                    {showApproval && (
+                      <td className="border p-2 space-x-2">
+                        <button onClick={() => handleApproval(s._id, true)} className="bg-green-500 text-white px-2 py-1 rounded">Approve</button>
+                        <button onClick={() => handleApproval(s._id, false)} className="bg-red-500 text-white px-2 py-1 rounded">Reject</button>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
           {/* Pagination */}
-          <div className="flex justify-between items-center mt-3">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((p) => p - 1)}
-              className="px-3 py-1 border rounded"
-            >
-              Prev
-            </button>
+          <div className="flex justify-between items-center mt-2">
+            <button disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className="px-2 py-1 border rounded">Prev</button>
             <span>Page {currentPage} of {totalPages}</span>
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((p) => p + 1)}
-              className="px-3 py-1 border rounded"
-            >
-              Next
-            </button>
+            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className="px-2 py-1 border rounded">Next</button>
           </div>
 
-          {/* Approve / Reject Buttons */}
-          <div className="mt-4 flex space-x-4">
-            <button
-              onClick={() => handleApproveReject(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded"
-            >
-              Approve & Return
-            </button>
-            <button
-              onClick={() => handleApproveReject(false)}
-              className="bg-red-600 text-white px-4 py-2 rounded"
-            >
-              Reject
-            </button>
-          </div>
+          {/* Return Button */}
+          {!showApproval && (
+            <div className="mt-4">
+              <button onClick={handleReturn} className="bg-green-600 text-white px-4 py-2 rounded">
+                Return and Export Excel
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <p>No records found</p>
