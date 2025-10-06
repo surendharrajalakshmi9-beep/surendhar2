@@ -587,7 +587,7 @@ app.get("/api/spares/return", async (req, res) => {
 // --- Approve / Reject Return Spare ---
 app.put("/api/spares/approval/:id", async (req, res) => {
   try {
-    const { approved } = req.body; // boolean
+    const { approved } = req.body; // boolean 
 
     const returnSpare = await ReturnSpare.findById(req.params.id);
     if (!returnSpare) return res.status(404).json({ error: "Return spare not found" });
