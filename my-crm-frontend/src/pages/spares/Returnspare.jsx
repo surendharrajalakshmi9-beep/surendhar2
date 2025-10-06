@@ -102,6 +102,7 @@ const Returnspare = () => {
       if (condition === "good") {
         setSpares((prev) => prev.filter((s) => !selected.includes(s._id)));
       }
+      fetchSpares(); // re-fetch with current filters
       setSelected([]);
       setEditQty({});
       exportExcel(selectedSpares);
