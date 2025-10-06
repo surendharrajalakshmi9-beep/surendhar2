@@ -125,9 +125,9 @@ const Returnspare = () => {
     try {
       for (const id of selected) {
         if (approved) {
-          await axios.delete(`/api/spares/${id}`);
+          await axios.delete(`/api/spares/approval/${id}`);
         } else {
-          await axios.put(`/api/spares/${id}`, { status: "" });
+          await axios.put(`/api/spares/approval/${id}`, { status: "" });
         }
       }
       alert(approved ? "Approved successfully." : "Rejected successfully.");
