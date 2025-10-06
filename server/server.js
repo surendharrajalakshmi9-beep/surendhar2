@@ -59,6 +59,8 @@ const callSchema = new mongoose.Schema({
    callSubtype: { type: String, default: ""},
   natureOfComplaint: { type: String, default: ""},
   amountReceived: { type: Number, default: 0 },
+  warrantyStatus: { type: String, default:""},
+   owamtReceived: { type: Number, default: 0 },
 
 });
 const CallDetail = mongoose.model("CallDetails", callSchema);
