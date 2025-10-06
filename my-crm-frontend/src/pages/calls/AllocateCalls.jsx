@@ -524,9 +524,9 @@ const fetchTechnicianCount = async (tech) => {
           </p>
         </div>
       )}
-    </div>
-  );
-}
+    
+  
+
 
   
       {/* Edit Modal */}
