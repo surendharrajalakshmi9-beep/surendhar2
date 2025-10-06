@@ -532,55 +532,53 @@ app.post("/api/spares/return", async (req, res) => {
 
 
 // ✅ --- GET Return Spares for display ---
+// --- GET Return Spares for Display ---
 app.get("/api/spares/return", async (req, res) => {
   try {
-    const { brand, condition, showApproval } = req.query;
+    const { brand, fromDate, toDate, mslStatus, condition, showApproval } = req.query;
 
-    // Filter ReturnSpare first
-    const filter = {};
+    let filter = {};
+
+    // 🔹 Filter by Brand
     if (brand) filter.brand = brand;
-    if (condition) filter.returnType = condition;
-    if (showApproval === "true") filter.status = "Return Approved";
 
-    const returnSpares = await ReturnSpare.find(filter).lean();
+    // 🔹 MSL Filter
+    if (mslStatus) filter.mslType = mslStatus;
 
-    // Get all itemNos from returnSpares
-    const itemNos = returnSpares.map((r) => r.spareCode);
+    // 🔹 Date Range
+    if (fromDate && toDate) {
+      filter.datespare = {
+        $gte: new Date(fromDate),
+        $lte: new Date(toDate),
+      };
+    }
 
-    // Fetch corresponding Spare documents
-    const spareData = await Spare.find({ itemNo: { $in: itemNos } })
-      .select("quantity datespare mrp itemNo")
-      .lean();
+    // 🔹 Status condition
+    if (showApproval === "true") {
+      filter.status = "Return Initiated"; // Show only items waiting for approval
+    } else {
+      filter.status = { $ne: "Return Initiated" }; // Exclude initiated ones
+    }
 
-    // Map Spare info to ReturnSpare
+    const spares = await Spare.find(filter).lean();
+
+    // 🔹 Compute number of days from spare date
     const today = new Date();
-    const mergedData = returnSpares.map((r) => {
-      const spare = spareData.find((s) => s.itemNo === r.spareCode) || {};
-
-      const spareDate = r.spareDate || spare.datespare;
+    const processed = spares.map((s) => {
+      const spareDate = s.datespare ? new Date(s.datespare) : null;
       const noOfDays = spareDate
-        ? Math.floor((today - new Date(spareDate)) / (1000 * 60 * 60 * 24))
+        ? Math.floor((today - spareDate) / (1000 * 60 * 60 * 24))
         : 0;
 
       return {
-        _id: r._id,
-        spareCode: r.spareCode,
-        spareName: r.spareName,
-        brand: r.brand,
-        returnQty: r.returnQty,
-        availableQty: spare.quantity || 0,  // ✅ now available quantity
-        mslType: r.mslType || spare.mslType || "Non-MSL",
-        mrp: spare.mrp || 0,
-        spareDate,
+        ...s,
         noOfDays,
-        status: r.status,
-        returnType: r.returnType,
       };
     });
 
-    res.json(mergedData);
+    res.json(processed);
   } catch (err) {
-    console.error("Error fetching return spares:", err);
+    console.error("Error fetching spares:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
