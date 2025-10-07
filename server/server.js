@@ -537,68 +537,76 @@ app.get("/api/spares/return", async (req, res) => {
   try {
     const { brand, fromDate, toDate, mslStatus, condition, showApproval } = req.query;
 
-    let filter = {};
+    let spares = [];
 
-    // 🔹 Filter by Brand
-    if (brand) filter.brand = brand;
+    // 🔹 GOOD RETURNS
+    if (condition === "good") {
+      let filter = {};
 
-    // 🔹 MSL Filter
-    if (mslStatus) filter.mslType = mslStatus;
+      // 🔹 Filter by Brand
+      if (brand) filter.brand = brand;
 
-    // 🔹 Date Range
-    if (fromDate && toDate) {
-      filter.datespare = {
-        $gte: new Date(fromDate),
-        $lte: new Date(toDate),
-      };
+      // 🔹 MSL Filter
+      if (mslStatus) filter.mslType = mslStatus;
+
+      // 🔹 Date Range
+      if (fromDate && toDate) {
+        filter.datespare = {
+          $gte: new Date(fromDate),
+          $lte: new Date(toDate),
+        };
+      }
+
+      // 🔹 Status condition
+      if (showApproval === "true") {
+        filter.status = "Return Initiated"; // Waiting for approval
+      } else {
+        filter.status = { $ne: "Return Initiated" }; // Exclude initiated ones
+      }
+
+      const spareDocs = await Spare.find(filter).lean();
+
+      // 🔹 Compute number of days from spare date
+      const today = new Date();
+      spares = spareDocs.map((s) => {
+        const spareDate = s.datespare ? new Date(s.datespare) : null;
+        const noOfDays = spareDate
+          ? Math.floor((today - spareDate) / (1000 * 60 * 60 * 24))
+          : 0;
+
+        return { ...s, noOfDays };
+      });
     }
-  if (condition === "good") {
-     // 🔹 Status condition
-    if (showApproval === "true") {
-      filter.status = "Return Initiated"; // Show only items waiting for approval
-    } else {
-      filter.status = { $ne: "Return Initiated" }; // Exclude initiated ones
-    }
 
-    const spares = await Spare.find(filter).lean();
-
-    // 🔹 Compute number of days from spare date
-    const today = new Date();
-    const processed = spares.map((s) => {
-      const spareDate = s.datespare ? new Date(s.datespare) : null;
-      const noOfDays = spareDate
-        ? Math.floor((today - spareDate) / (1000 * 60 * 60 * 24))
-        : 0;
-
-      return {
-        ...s,
-        noOfDays,
-      };
-    });
-  } else if (condition === "defective") {
+    // 🔹 DEFECTIVE RETURNS
+    else if (condition === "defective") {
       let query = { defectiveSubmitted: "yes" };
+
       if (fromDate && toDate) {
         query.completionDate = {
           $gte: new Date(fromDate),
           $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
         };
       }
+
       if (brand) query.brand = brand;
-  let spares = [];
+
       console.log("Defective query:", query);
+
       spares = await CallDetail.find(query)
         .select("brand spareCode spareName qty completionDate")
         .lean();
     }
 
-    console.log("Final spares:", spares.length);
+    // 🔹 Final response
+    console.log("Final spares count:", spares.length);
     res.json(spares);
-
-    } catch (err) {
+  } catch (err) {
     console.error("Error fetching spares:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 // --- Approve / Reject Return Spare ---
 app.put("/api/spares/approval/:id", async (req, res) => {
   try {
