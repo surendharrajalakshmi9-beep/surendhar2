@@ -468,6 +468,68 @@ app.get("/api/technicians", async (req, res) => {
 });
 
 
+// --- APPROVE or REJECT Return Spare ---
+app.put("/api/spares/approval/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { action } = req.body; // "approve" or "reject"
+
+    const returnSpare = await ReturnSpare.findById(id);
+    if (!returnSpare) {
+      return res.status(404).json({ error: "Return spare not found" });
+    }
+
+    // --- APPROVE ---
+    if (action === "approve") {
+      if (returnSpare.status !== "Return Initiated") {
+        return res
+          .status(400)
+          .json({ error: "Only 'Return Initiated' items can be approved." });
+      }
+
+      // ✅ Update ReturnSpare status → Return Approved
+      returnSpare.status = "Return Approved";
+      returnSpare.approvedDate = new Date();
+      await returnSpare.save();
+
+      // ✅ Delete from Spare collection
+      await Spare.findOneAndDelete({
+        itemNo: returnSpare.spareCode,
+        brand: returnSpare.brand,
+      });
+
+      return res.json({
+        message: "Return approved successfully.",
+        updated: returnSpare,
+      });
+    }
+
+    // --- REJECT ---
+    else if (action === "reject") {
+      // ✅ Update Spare status to empty string
+      await Spare.findOneAndUpdate(
+        {
+          itemNo: returnSpare.spareCode,
+          brand: returnSpare.brand,
+        },
+        { status: "" }
+      );
+
+      // ✅ Delete from ReturnSpare
+      await ReturnSpare.findByIdAndDelete(id);
+
+      return res.json({ message: "Return rejected successfully." });
+    }
+
+    // --- INVALID ACTION ---
+    else {
+      return res.status(400).json({ error: "Invalid action specified." });
+    }
+  } catch (err) {
+    console.error("Error processing approval/rejection:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 // ✅ --- GET Return Spares for display ---
 // --- GET Return Spares for Display ---
