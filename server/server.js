@@ -552,8 +552,8 @@ app.get("/api/spares/return", async (req, res) => {
         $lte: new Date(toDate),
       };
     }
-
-    // 🔹 Status condition
+  if (condition === "good") {
+     // 🔹 Status condition
     if (showApproval === "true") {
       filter.status = "Return Initiated"; // Show only items waiting for approval
     } else {
@@ -575,9 +575,26 @@ app.get("/api/spares/return", async (req, res) => {
         noOfDays,
       };
     });
+  } else if (condition === "defective") {
+      let query = { defectiveSubmitted: "yes" };
+      if (fromDate && toDate) {
+        query.completionDate = {
+          $gte: new Date(fromDate),
+          $lte: new Date(new Date(toDate).setHours(23, 59, 59, 999)),
+        };
+      }
+      if (brand) query.brand = brand;
 
-    res.json(processed);
-  } catch (err) {
+      console.log("Defective query:", query);
+      spares = await CallDetail.find(query)
+        .select("brand spareCode spareName qty completionDate")
+        .lean();
+    }
+
+    console.log("Final spares:", spares.length);
+    res.json(spares);
+
+    } catch (err) {
     console.error("Error fetching spares:", err);
     res.status(500).json({ error: "Internal server error" });
   }
