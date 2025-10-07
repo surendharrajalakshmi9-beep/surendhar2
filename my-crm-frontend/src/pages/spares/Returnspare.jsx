@@ -125,14 +125,13 @@ const Returnspare = () => {
 
     try {
       for (const id of selected) {
-        if (approved) {
-          await axios.delete(`/api/spares/approval/${id}`);
-        } else {
-          await axios.put(`/api/spares/approval/${id}`, { status: "" });
-        }
-      }
-      alert(approved ? "Approved successfully." : "Rejected successfully.");
-      fetchSpares();
+  await axios.put(`/api/spares/approval/${id}`, {
+    action: approved ? "approve" : "reject",
+  });
+}
+alert(approved ? "Approved successfully." : "Rejected successfully.");
+fetchSpares();
+
     } catch (err) {
       console.error("Error processing approval:", err);
       alert("Failed to process approval.");
@@ -307,7 +306,7 @@ const Returnspare = () => {
               onClick={() => handleApproveReject(true)}
               className="bg-green-600 text-white px-4 py-2 rounded"
             >
-              Approve & Return
+              Approve
             </button>
             <button
               onClick={() => handleApproveReject(false)}
