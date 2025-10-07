@@ -584,7 +584,7 @@ app.get("/api/spares/return", async (req, res) => {
         };
       }
       if (brand) query.brand = brand;
-
+  const spares;
       console.log("Defective query:", query);
       spares = await CallDetail.find(query)
         .select("brand spareCode spareName qty completionDate")
