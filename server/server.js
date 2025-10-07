@@ -607,31 +607,70 @@ app.get("/api/spares/return", async (req, res) => {
   }
 });
 
-// --- Approve / Reject Return Spare ---
+// --- APPROVE or REJECT Return Spare ---
 app.put("/api/spares/approval/:id", async (req, res) => {
   try {
-    const { approved } = req.body; // boolean 
+    const { id } = req.params;
+    const { action } = req.body; // "approve" or "reject"
 
-    const returnSpare = await ReturnSpare.findById(req.params.id);
-    if (!returnSpare) return res.status(404).json({ error: "Return spare not found" });
-
-    if (approved) {
-      returnSpare.status = "Return Approved";
-      await returnSpare.save();
-
-      // Remove from Spare collection if still exists
-      await Spare.findOneAndDelete({ itemNo: returnSpare.spareCode });
-    } else {
-      returnSpare.status = "Rejected";
-      await returnSpare.save();
+    // Find ReturnSpare by ID
+    const returnSpare = await ReturnSpare.findById(id);
+    if (!returnSpare) {
+      return res.status(404).json({ error: "Return spare not found" });
     }
 
-    res.json({ success: true, status: returnSpare.status });
+    // --- APPROVE ---
+    if (action === "approve") {
+      if (returnSpare.status !== "Return Initiated") {
+        return res
+          .status(400)
+          .json({ error: "Only 'Return Initiated' items can be approved." });
+      }
+
+      // ✅ Update ReturnSpare status → Return Approved
+      returnSpare.status = "Return Approved";
+      returnSpare.approvedDate = new Date();
+      await returnSpare.save();
+
+      // ✅ Delete corresponding Spare using itemNo and brand
+      await Spare.findOneAndDelete({
+        itemNo: returnSpare.spareCode, // check spareCode in ReturnSpare
+        brand: returnSpare.brand,
+      });
+
+      return res.json({
+        message: "Return approved successfully.",
+        updated: returnSpare,
+      });
+    }
+
+    // --- REJECT ---
+    else if (action === "reject") {
+      // ✅ Update Spare status to empty string
+      await Spare.findOneAndUpdate(
+        {
+          itemNo: returnSpare.spareCode, // check spareCode in ReturnSpare
+          brand: returnSpare.brand,
+        },
+        { status: "" }
+      );
+
+      // ✅ Delete from ReturnSpare collection
+      await ReturnSpare.findByIdAndDelete(id);
+
+      return res.json({ message: "Return rejected successfully." });
+    }
+
+    // --- INVALID ACTION ---
+    else {
+      return res.status(400).json({ error: "Invalid action specified." });
+    }
   } catch (err) {
-    console.error(err);
+    console.error("Error processing approval/rejection:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // --- Save Returned Spares ---
 // --- Save Returned Spares ---
