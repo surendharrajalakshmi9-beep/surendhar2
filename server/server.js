@@ -473,56 +473,49 @@ app.put("/api/spares/approval/:id", async (req, res) => {
     const { id } = req.params;
     const { action } = req.body; // "approve" or "reject"
 
-    // Fetch ReturnSpare record
-    const returnSpare = await ReturnSpare.findById(id);
+    // 1️⃣ Find spare first (since frontend sends spare._id)
+    const spare = await Spare.findById(id);
+    if (!spare) {
+      return res.status(404).json({ error: "Spare not found" });
+    }
+
+    // 2️⃣ Find corresponding return record (by itemNo + brand + mslType)
+    const returnSpare = await ReturnSpare.findOne({
+      spareCode: spare.itemNo,
+      brand: spare.brand,
+      mslType: spare.mslType,
+    });
+
     if (!returnSpare) {
-      return res.status(404).json({ error: "Return spare not found" });
+      return res.status(404).json({ error: "Matching return spare not found" });
     }
 
     // --- APPROVE ---
     if (action === "approve") {
-      // ✅ Update ReturnSpare (match by spareCode + mslType)
-      const updatedReturn = await ReturnSpare.findOneAndUpdate(
-        {
-          spareCode: returnSpare.spareCode,
-          mslType: returnSpare.mslType,
-        },
-        {
-          status: "Return Approved",
-          approvedDate: new Date(),
-        },
-        { new: true }
-      );
+      // ✅ Update ReturnSpare → Return Approved
+      returnSpare.status = "Return Approved";
+      returnSpare.approvedDate = new Date();
+      await returnSpare.save();
 
-      // ✅ Delete corresponding spare from Spare collection
-      await Spare.findOneAndDelete({
-        itemNo: returnSpare.spareCode,
-        brand: returnSpare.brand,
-        mslType: returnSpare.mslType,
-      });
+      // ✅ Delete spare from Spare collection
+      await Spare.findByIdAndDelete(spare._id);
 
       return res.json({
         message: "Return approved successfully.",
-        updated: updatedReturn,
+        updated: returnSpare,
       });
     }
 
     // --- REJECT ---
     else if (action === "reject") {
-      // ✅ Update Spare status = ""
-      await Spare.findOneAndUpdate(
-        {
-          itemNo: returnSpare.spareCode,
-          brand: returnSpare.brand,
-          mslType: returnSpare.mslType,
-        },
-        { status: "" }
-      );
+      // ✅ Update Spare → status ""
+      await Spare.findByIdAndUpdate(spare._id, { status: "" });
 
-      // ✅ Delete from ReturnSpare
+      // ✅ Delete ReturnSpare
       await ReturnSpare.findOneAndDelete({
-        spareCode: returnSpare.spareCode,
-        mslType: returnSpare.mslType,
+        spareCode: spare.itemNo,
+        brand: spare.brand,
+        mslType: spare.mslType,
       });
 
       return res.json({ message: "Return rejected successfully." });
@@ -537,7 +530,6 @@ app.put("/api/spares/approval/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
 
 // ✅ --- GET Return Spares for display ---
 // --- GET Return Spares for Display ---
