@@ -467,13 +467,13 @@ app.get("/api/technicians", async (req, res) => {
   }
 });
 
-
 // --- APPROVE or REJECT Return Spare ---
 app.put("/api/spares/approval/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { action } = req.body; // "approve" or "reject"
 
+    // Fetch ReturnSpare record
     const returnSpare = await ReturnSpare.findById(id);
     if (!returnSpare) {
       return res.status(404).json({ error: "Return spare not found" });
@@ -481,42 +481,49 @@ app.put("/api/spares/approval/:id", async (req, res) => {
 
     // --- APPROVE ---
     if (action === "approve") {
-      if (returnSpare.status !== "Return Initiated") {
-        return res
-          .status(400)
-          .json({ error: "Only 'Return Initiated' items can be approved." });
-      }
+      // ✅ Update ReturnSpare (match by spareCode + mslType)
+      const updatedReturn = await ReturnSpare.findOneAndUpdate(
+        {
+          spareCode: returnSpare.spareCode,
+          mslType: returnSpare.mslType,
+        },
+        {
+          status: "Return Approved",
+          approvedDate: new Date(),
+        },
+        { new: true }
+      );
 
-      // ✅ Update ReturnSpare status → Return Approved
-      returnSpare.status = "Return Approved";
-      returnSpare.approvedDate = new Date();
-      await returnSpare.save();
-
-      // ✅ Delete from Spare collection
+      // ✅ Delete corresponding spare from Spare collection
       await Spare.findOneAndDelete({
         itemNo: returnSpare.spareCode,
         brand: returnSpare.brand,
+        mslType: returnSpare.mslType,
       });
 
       return res.json({
         message: "Return approved successfully.",
-        updated: returnSpare,
+        updated: updatedReturn,
       });
     }
 
     // --- REJECT ---
     else if (action === "reject") {
-      // ✅ Update Spare status to empty string
+      // ✅ Update Spare status = ""
       await Spare.findOneAndUpdate(
         {
           itemNo: returnSpare.spareCode,
           brand: returnSpare.brand,
+          mslType: returnSpare.mslType,
         },
         { status: "" }
       );
 
       // ✅ Delete from ReturnSpare
-      await ReturnSpare.findByIdAndDelete(id);
+      await ReturnSpare.findOneAndDelete({
+        spareCode: returnSpare.spareCode,
+        mslType: returnSpare.mslType,
+      });
 
       return res.json({ message: "Return rejected successfully." });
     }
@@ -530,6 +537,7 @@ app.put("/api/spares/approval/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // ✅ --- GET Return Spares for display ---
 // --- GET Return Spares for Display ---
