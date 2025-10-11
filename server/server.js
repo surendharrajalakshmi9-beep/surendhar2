@@ -1763,16 +1763,17 @@ app.put("/api/calls/transfer", async (req, res) => {
     res.status(500).json({ error: "Failed to transfer technician" });
   }
 });
-// Get distinct products and pincodes based on brand
+// ✅ Get distinct products and pincodes where technician is empty
 app.get("/api/calls/filters", async (req, res) => {
   try {
     const { brand } = req.query;
-    let query = {};
+    let query = { technician: { $in: [null, ""] } }; // only unassigned calls
 
     if (brand && brand.toLowerCase() !== "all") {
       query.brand = brand;
     }
 
+    // Fetch distinct values based on filtered records
     const products = await CallDetail.distinct("product", query);
     const pincodes = await CallDetail.distinct("pincode", query);
 
