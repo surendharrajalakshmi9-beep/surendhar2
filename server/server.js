@@ -1143,7 +1143,7 @@ function excelSerialToFormattedString(serial) {
     return `${yyyy}-${dd}-${mm} ${HH}:${MM}:${SS}`;
 }
     calls = sheet.map((row) => {
-        const dateValue = row["Complaint date"];
+        const dateValue = row["Complaint Date and Time"];
         let jsDate = null;
 
         if (dateValue) {
@@ -1162,7 +1162,7 @@ function excelSerialToFormattedString(serial) {
 
         return {
             brand,
-]            callNo: row["Complaint number"],
+]            callNo: row["Complaint Number"],
             phoneNo: row["Mobile No"] || "",
             customerName: row["Name"],
             address: row["Address"],
