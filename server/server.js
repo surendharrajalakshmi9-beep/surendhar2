@@ -1121,7 +1121,7 @@ app.post("/api/calls/upload", upload.single("file"), async (req, res) => {
         natureOfComplaint: row["Nature of Complaint"] || "",
          };
     });
-} else if (brand === "Bajaj - Surendhar Enterprises" || "Bajaj - S.R Enterprises") {
+} else if (brand === "Bajaj - Surendhar Enterprises") {
    
   const formats = ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY HH:mm", "DD/MM/YYYY"];
 // Function to convert Excel serial to JS Date
