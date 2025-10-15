@@ -13,6 +13,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 
+
 // Required for __dirname in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -1122,8 +1123,8 @@ app.post("/api/calls/upload", upload.single("file"), async (req, res) => {
          };
     });
 } else if (brand === "Bajaj - Surendhar Enterprises") {
-   
-  const formats = ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY HH:mm", "DD/MM/YYYY"];
+
+          const formats = ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY HH:mm", "DD/MM/YYYY"];
 // Function to convert Excel serial to JS Date
 function excelSerialToFormattedString(serial) {
     const excelEpoch = new Date(1899, 11, 30); // Excel epoch in local time
@@ -1181,7 +1182,66 @@ function excelSerialToFormattedString(serial) {
             natureOfComplaint: row["Nature Of Complaint"] || "",
         };
     });
-} else  if (brand === "Usha") {
+} 
+/*  const formats = ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY HH:mm", "DD/MM/YYYY"];
+// Function to convert Excel serial to JS Date
+function excelSerialToFormattedString(serial) {
+    const excelEpoch = new Date(1899, 11, 30); // Excel epoch in local time
+    const days = Math.floor(serial);
+    const fraction = serial - days;
+    const ms = Math.round(fraction * 24 * 60 * 60 * 1000);
+    const date = new Date(excelEpoch.getTime() + days * 86400000 + ms);
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0'); // month 1–12
+    const dd = String(date.getDate()).padStart(2, '0');
+    const HH = String(date.getHours()).padStart(2, '0');
+    const MM = String(date.getMinutes()).padStart(2, '0');
+    const SS = String(date.getSeconds()).padStart(2, '0');
+
+    return `${yyyy}-${dd}-${mm} ${HH}:${MM}:${SS}`;
+}
+    calls = sheet.map((row) => {
+        const dateValue = row["Complaint date"];
+        let jsDate = null;
+
+        if (dateValue) {
+            if (typeof dateValue === "string") {
+                const m = moment(dateValue.trim(), formats, true);
+                if (m.isValid()) {
+                    jsDate = m.toDate();
+                } else {
+                    console.error("Invalid date format:", dateValue);
+                }
+            } else if (typeof dateValue === "number") {
+                // Excel serial date conversion
+                jsDate = new Date((dateValue - 25569) * 86400 * 1000);
+            }
+        }
+
+        return {
+            brand,
+            callNo: row["Complaint number"],
+            phoneNo: row["Mobile No"] || "",
+            customerName: row["Name"],
+            address: row["Address"],
+            pincode: row["Pin code"],
+            callSubtype:
+                row["Call Type"] === "Complaint Call"
+                    ? "Breakdown"
+                    : row["Call Type"],
+            product: row["Product type"],
+            model: row["BU 3"],
+            tat: jsDate, // Parsed date stored here
+            callerType:
+                row["Complaint From"] === "End Customer"
+                    ? "Customer"
+                    : row["Complaint From"] || "",
+            type: row["Warranty Status"] || "",
+            natureOfComplaint: row["Nature Of Complaint"] || "",
+        };
+    });
+} */else  if (brand === "Usha") {
       const formats = ["DD/MM/YYYY HH:mm:ss", "DD/MM/YYYY HH:mm", "DD/MM/YYYY"];
 // Function to convert Excel serial to JS Date
 function excelSerialToFormattedString(serial) {
