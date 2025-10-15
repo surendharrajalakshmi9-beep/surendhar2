@@ -1162,7 +1162,7 @@ function excelSerialToFormattedString(serial) {
 
         return {
             brand,
-]            callNo: row["Complaint Number"],
+            callNo: row["Complaint Number"],
             phoneNo: row["Mobile No"] || "",
             customerName: row["Name"],
             address: row["Address"],
