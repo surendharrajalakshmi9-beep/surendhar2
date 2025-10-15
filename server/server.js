@@ -1162,7 +1162,7 @@ function excelSerialToFormattedString(serial) {
 
         return {
             brand,
-            callNo: row["Complaint number"],
+]            callNo: row["Complaint number"],
             phoneNo: row["Mobile No"] || "",
             customerName: row["Name"],
             address: row["Address"],
@@ -1173,7 +1173,7 @@ function excelSerialToFormattedString(serial) {
                     : row["Call Type"],
             product: row["Product type"],
             model: row["BU 3"],
-            tat: jsDate, // Parsed date stored here
+            tat: jsDate || null, // Parsed date stored here
             callerType:
                 row["Complaint From"] === "End Customer"
                     ? "Customer"
