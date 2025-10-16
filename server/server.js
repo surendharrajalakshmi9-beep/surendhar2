@@ -1162,7 +1162,7 @@ function excelSerialToFormattedString(serial) {
 
         return {
             brand,
-            callNo: row["Complaint Number"],
+            callNo: row["Complaint Number"] || row["Complaint number"],
             phoneNo: row["Mobile No"] || "",
             customerName: row["Name"],
             address: row["Address"],
@@ -1171,7 +1171,7 @@ function excelSerialToFormattedString(serial) {
                 row["Call Type"] === "Complaint Call"
                     ? "Breakdown"
                     : row["Call Type"],
-            product: row["Product Type"],
+            product: row["Product Type"] || row["Product type"],
             model: row["BU 3"],
             tat: jsDate || null, // Parsed date stored here
             callerType:
@@ -1279,9 +1279,9 @@ function excelSerialToFormattedString(serial) {
             }
         }
 
-        return {
+           return {
             brand,
-            callNo: row["Complaint Number"],
+            callNo: row["Complaint Number"] || row["Complaint number"],
             phoneNo: row["Mobile No"] || "",
             customerName: row["Name"],
             address: row["Address"],
@@ -1290,7 +1290,7 @@ function excelSerialToFormattedString(serial) {
                 row["Call Type"] === "Complaint Call"
                     ? "Breakdown"
                     : row["Call Type"],
-            product: row["Product Type"],
+            product: row["Product Type"] || row["Product type"],
             model: row["BU 3"],
             tat: jsDate || null, // Parsed date stored here
             callerType:
