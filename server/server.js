@@ -1983,7 +1983,11 @@ app.put("/api/calls/:callNo", async (req, res) => {
 app.get("/api/calls/technician-count/:technician", async (req, res) => {
   try {
     const technician = req.params.technician;
-    const count = await CallDetail.countDocuments({ technician });
+      const count = await CallDetail.countDocuments({
+      technician,
+      status: { $ne: "Completed" }, // not equal to Completed
+    });
+
     res.json({ count });
   } catch (error) {
     console.error("Error fetching technician count:", error);
