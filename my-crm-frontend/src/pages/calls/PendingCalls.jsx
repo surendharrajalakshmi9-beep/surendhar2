@@ -284,8 +284,7 @@ export default function PendingCalls() {
           <div className="max-h-[500px] overflow-auto border rounded-md shadow-md">
             <div className="min-w-full overflow-x-auto">
               <table className="table-auto border-collapse border border-gray-300 text-sm min-w-[1200px]">
-                <thead className="bg-gray-200 sticky top-0 z-10">
-                  <tr>
+                
                     <thead className="bg-gray-200 sticky top-0 z-10">
   <tr>
     <th className="border p-2 text-center">
