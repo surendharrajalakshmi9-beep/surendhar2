@@ -429,45 +429,53 @@ export default function PendingCalls() {
             📋 WhatsApp Message Preview ({whatsAppPage}/{totalWhatsAppPages})
           </label>
 
-          <textarea
-            value={formattedText}
-            onChange={(e) => setFormattedText(e.target.value)}
-            className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
-          />
+          
+    <textarea
+      value={formattedText}
+      onChange={(e) => {
+        const value = e.target.value;
+        setFormattedText(value);
 
-          {/* WhatsApp Pagination */}
-          {totalWhatsAppPages > 1 && (
-            <div className="flex justify-center items-center mt-3 space-x-2">
-              <button
-                onClick={() => setWhatsAppPage((p) => Math.max(1, p - 1))}
-                disabled={whatsAppPage === 1}
-                className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-              >
-                Prev
-              </button>
+        // If user clears (cuts) the text completely
+        if (value.trim() === "" && whatsAppPage < totalWhatsAppPages) {
+          setTimeout(() => {
+            setWhatsAppPage((p) => Math.min(totalWhatsAppPages, p + 1));
+          }, 100); // small delay to ensure UI update
+        }
+      }}
+      className="w-full h-60 border rounded p-3 font-mono text-sm bg-gray-50"
+    />
 
-              <span className="text-sm">
-                Page {whatsAppPage} of {totalWhatsAppPages}
-              </span>
+         {/* WhatsApp pagination controls */}
+    {totalWhatsAppPages > 1 && (
+      <div className="flex justify-center items-center mt-3 space-x-2">
+        <button
+          onClick={() => setWhatsAppPage((p) => Math.max(1, p - 1))}
+          disabled={whatsAppPage === 1}
+          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+        >
+          Prev
+        </button>
+        <span className="text-sm">
+          Page {whatsAppPage} of {totalWhatsAppPages}
+        </span>
+        <button
+          onClick={() =>
+            setWhatsAppPage((p) => Math.min(totalWhatsAppPages, p + 1))
+          }
+          disabled={whatsAppPage === totalWhatsAppPages}
+          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    )}
 
-              <button
-                onClick={() =>
-                  setWhatsAppPage((p) => Math.min(totalWhatsAppPages, p + 1))
-                }
-                disabled={whatsAppPage === totalWhatsAppPages}
-                className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          )}
-
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            You can copy or edit this text and send via WhatsApp manually.
-          </p>
-        </div>
-      )}
-
+    <p className="text-xs text-gray-500 mt-2 text-center">
+      ✂️ After you copy or cut this message (Ctrl+A → Ctrl+X), the next call will auto-load.
+    </p>
+  </div>
+)}
       
       {/* Status Update Section */}
       <div className="mt-4 space-y-4">
