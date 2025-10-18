@@ -1986,7 +1986,7 @@ app.get("/api/calls/technician-count/:technician", async (req, res) => {
 
     const count = await CallDetail.countDocuments({
       technician,
-      status: { $ne: "Completed" }, // exclude only 'Completed'
+      status: { $ne: "completed" }, // exclude only 'Completed'
     });
 
     res.json({ count });
