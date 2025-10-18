@@ -15,6 +15,8 @@ export default function PendingCalls() {
 
   const [spareCode, setSpareCode] = useState("");
   const [spareName, setSpareName] = useState("");
+  const [transferTech, setTransferTech] = useState(""); // selected technician for transfer
+
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -284,7 +286,24 @@ export default function PendingCalls() {
               <table className="table-auto border-collapse border border-gray-300 text-sm min-w-[1200px]">
                 <thead className="bg-gray-200 sticky top-0 z-10">
                   <tr>
-                    <th className="border p-2">Select</th>
+                    <thead className="bg-gray-200 sticky top-0 z-10">
+  <tr>
+    <th className="border p-2 text-center">
+      <input
+        type="checkbox"
+        checked={
+          currentRecords.length > 0 &&
+          selectedCalls.length === currentRecords.length
+        }
+        onChange={(e) => {
+          if (e.target.checked) {
+            setSelectedCalls(currentRecords.map((c) => c.callNo));
+          } else {
+            setSelectedCalls([]);
+          }
+        }}
+      />
+    </th>
                     <th className="border p-2">Call No</th>
                     <th className="border p-2">Brand</th>
                     <th className="border p-2">Customer</th>
@@ -330,6 +349,61 @@ export default function PendingCalls() {
         )}
       </div>
 
+{/* ✅ Transfer to Technician Section */}
+{selectedCalls.length > 0 && (
+  <div className="mt-4 border-t pt-4">
+    <h3 className="font-semibold mb-2">Transfer Selected Calls</h3>
+    <div className="flex space-x-2">
+      <select
+        value={transferTech}
+        onChange={(e) => setTransferTech(e.target.value)}
+        className="border p-2 rounded w-64"
+      >
+        <option value="">Select Technician</option>
+        {technicians.map((t) => (
+          <option key={t._id} value={t.name}>
+            {t.name}
+          </option>
+        ))}
+      </select>
+
+      <button
+        onClick={async () => {
+          if (!transferTech) return toast.error("Select a technician");
+          if (selectedCalls.length === 0)
+            return toast.error("Select at least one call");
+
+          try {
+            const res = await fetch("/api/calls/transfer", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                callNos: selectedCalls,
+                newTechnician: transferTech,
+              }),
+            });
+
+            if (res.ok) {
+              toast.success("Calls transferred successfully");
+              fetchCalls();
+              setSelectedCalls([]);
+              setTransferTech("");
+            } else {
+              toast.error("Failed to transfer calls");
+            }
+          } catch (err) {
+            toast.error("Server error during transfer");
+          }
+        }}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Transfer To
+      </button>
+    </div>
+  </div>
+)}
+
+            
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center space-x-2 mt-2">
