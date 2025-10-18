@@ -1729,12 +1729,40 @@ app.get("/api/calls/filter-count", async (req, res) => {
 
 app.get("/api/calls/pending-count", async (req, res) => {
   try {
-    const brand = req.query.brand;
+    const { brand, technician, pendingWith } = req.query;
 
-    let query = { status: { $nin: ["", "completed"] } }; // exclude empty & completed
+    // Base query: exclude empty & completed
+    let query = { status: { $nin: ["", "completed"] } };
 
+    // Filter by brand if provided
     if (brand && brand.toLowerCase() !== "all") {
       query.brand = brand;
+    }
+
+    // Filter by technician if provided
+    if (technician && technician.toLowerCase() !== "all") {
+      query.technician = technician;
+    }
+
+    // Filter based on pendingWith
+    if (pendingWith && pendingWith.toLowerCase() !== "all") {
+      switch (pendingWith) {
+        case "pending with technician":
+          query.status = "pending";
+          break;
+        case "spare pending":
+          query.status = "spare pending";
+          break;
+        case "replacement":
+          query.status = "replacement done";
+          break;
+        case "appointment":
+          query.status = "appointment";
+          break;
+        case "others":
+          query.status = { $nin: ["pending", "spare pending", "replacement done", "appointment", "", "completed"] };
+          break;
+      }
     }
 
     const count = await CallDetail.countDocuments(query);
@@ -1744,6 +1772,7 @@ app.get("/api/calls/pending-count", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch pending count" });
   }
 });
+
 
 
 // Get calls where status is NOT 'completed'
