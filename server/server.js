@@ -1979,13 +1979,14 @@ app.put("/api/calls/:callNo", async (req, res) => {
 });
 
 
-// Get count of calls allocated to a technician
+// Get count of calls allocated to a technician where status is NOT 'Completed'
 app.get("/api/calls/technician-count/:technician", async (req, res) => {
   try {
-    const technician = req.params.technician;
-      const count = await CallDetail.countDocuments({
+    const { technician } = req.params;
+
+    const count = await CallDetail.countDocuments({
       technician,
-      status: { $ne: "Completed" }, // not equal to Completed
+      status: { $ne: "Completed" }, // exclude only 'Completed'
     });
 
     res.json({ count });
