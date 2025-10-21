@@ -260,9 +260,10 @@ export default function PendingCalls() {
             <option value="All">All</option>
             <option value="Pending with Technician">Pending with Technician</option>
             <option value="Spare Pending">Spare Pending</option>
-            <option value="Replacement">Replacement</option>
+           
             <option value="Appointment">Appointment</option>
-            <option value="Others">Others</option>
+            { /* <option value="Replacement">Replacement</option>
+            <option value="Others">Others</option>*/}
           </select>
         </div>
 
