@@ -1753,15 +1753,15 @@ app.get("/api/calls/pending-count", async (req, res) => {
         case "spare pending":
           query.status = "spare pending";
           break;
-        case "replacement":
-          query.status = "replacement done";
-          break;
+       // case "replacement":
+         // query.status = "replacement done";
+          //break;
         case "appointment":
           query.status = "appointment";
           break;
-        case "others":
-          query.status = { $nin: ["pending", "spare pending", "replacement done", "appointment", "", "completed"] };
-          break;
+        //case "others":
+          //query.status = { $nin: ["pending", "spare pending", "replacement done", "appointment", "", "completed"] };
+          //break;
       }
     }
 
