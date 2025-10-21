@@ -906,9 +906,10 @@ app.get("/api/dashboardCounts", async (req, res) => {
     });
 
     const pending = await CallDetail.countDocuments({
-      ...brandFilter,
-      status: { $ne: "completed" },
-    });
+  technician: { $ne: "" }, // technician is not empty
+  status: { $in: ["pending", "spare pending"] }, // only pending types
+  ...brandFilter, // optional brand filter if needed
+});
 
     const ageing = await CallDetail.countDocuments({
       ...brandFilter,
