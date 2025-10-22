@@ -913,7 +913,7 @@ app.get("/api/dashboardCounts", async (req, res) => {
 
     const ageing = await CallDetail.countDocuments({
       ...brandFilter,
-      status: { $ne: "completed" },
+      status: { $in: ["", "pending"] },
       assignedDate: { $lt: new Date(Date.now() - 48 * 60 * 60 * 1000) },
     });
 const highPriority = await CallDetail.countDocuments({
@@ -1783,7 +1783,7 @@ app.get("/api/calls/pending", async (req, res) => {
     const { brand, technician } = req.query;
 
     // Base query: all calls except completed
-    let query = { status: { $nin: ["", "completed"] } };
+    let query = { status: { $nin: ["", "completed", "cancel", "replacement done"] } };
 
     // ✅ Filter by brand if provided
     if (brand && brand.toLowerCase() !== "all") {
