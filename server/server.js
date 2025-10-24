@@ -1780,23 +1780,18 @@ app.get("/api/calls/pending-count", async (req, res) => {
 // Fetch pending calls (not completed)
 app.get("/api/calls/pending", async (req, res) => {
   try {
-    const { brand, technician } = req.query;
+    const { brand, technician, callNo } = req.query;
 
     // Base query: all calls except completed
     let query = { status: { $nin: ["", "completed", "cancel", "replacement done"] } };
 
-    // ✅ Filter by brand if provided
-    if (brand && brand.toLowerCase() !== "all") {
-      query.brand = brand;
-    }
+    if (brand && brand.toLowerCase() !== "all") query.brand = brand;
+    if (technician && technician.toLowerCase() !== "all") query.technician = technician;
 
-    // ✅ Filter by technician if provided
-    if (technician && technician.toLowerCase() !== "all") {
-      query.technician = technician;
-    }
+    // ✅ Direct search by call number if provided
+    if (callNo) query.callNo = callNo;
 
     const calls = await CallDetail.find(query).sort({ _id: -1 });
-
     res.json(calls);
   } catch (err) {
     console.error("Error fetching pending calls:", err);
