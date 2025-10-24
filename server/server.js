@@ -1775,7 +1775,7 @@ app.get("/api/calls/pending-count", async (req, res) => {
 });
 
 
-]
+
 // Get calls where status is NOT 'completed'
 // Fetch pending calls (not completed)
 app.get("/api/calls/pending", async (req, res) => {
