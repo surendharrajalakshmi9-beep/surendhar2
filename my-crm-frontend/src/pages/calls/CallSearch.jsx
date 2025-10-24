@@ -58,7 +58,8 @@ export default function CallSearch() {
       const params = new URLSearchParams();
       if (brand) params.append("brand", brand);
 
-      const res = await fetch(`/api/calls/pending?${params.toString()}`);
+      const res = await fetch(`/api/calls/pending?brand=${brand}&callNo=${callNo}`);
+
       const data = await res.json();
 
       if (!Array.isArray(data)) {
