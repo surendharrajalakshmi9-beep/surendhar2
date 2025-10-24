@@ -19,6 +19,9 @@ export default function Calls() {
         <NavLink to="allocate" className={linkClass}>
           Allocate Calls
         </NavLink>
+        <NavLink to="search" className={linkClass}>
+          Complete Status
+        </NavLink>
         <NavLink to="pending" className={linkClass}>
           Pending Calls
         </NavLink>
