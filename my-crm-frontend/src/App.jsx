@@ -8,6 +8,7 @@ import ManualCalls from "./pages/calls/ManualCalls";
 import UploadCalls from "./pages/calls/UploadCalls";
 import AllocateCalls from "./pages/calls/AllocateCalls";
 import PendingCalls from "./pages/calls/PendingCalls";
+import CallSearch from "./pages/calls/CallSearch";
 import TransferCalls from "./pages/calls/TransferCalls";
 import SearchCalls from "./pages/calls/SearchCalls";
 import Reports from "./pages/calls/Reports";
@@ -43,6 +44,7 @@ const [data, setData] = useState(null);
         <Route index element={<Navigate to="manual" replace />} /> 
         <Route path="manual" element={<ManualCalls />} />
         <Route path="upload" element={<UploadCalls />} />
+        <Route path="search" element={<CallSearch />} />
         <Route path="allocate" element={<AllocateCalls />} />
         <Route path="pending" element={<PendingCalls />} />
         <Route path="transfer" element={<TransferCalls />} />
