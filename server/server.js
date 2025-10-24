@@ -1783,7 +1783,7 @@ app.get("/api/calls/pending", async (req, res) => {
     const { brand, callNo } = req.query;
 
     // Base query: all calls except completed/cancelled/replacement done
-    let query = { status: { $nin: ["", "completed", "cancel", "replacement done"] } };
+    let query = { status: { $nin: ["completed", "cancel", "replacement done"] } };
 
     // ✅ Filter by brand
     if (brand && brand.toLowerCase() !== "all") query.brand = brand;
