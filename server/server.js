@@ -1801,66 +1801,60 @@ app.get("/api/calls/pending", async (req, res) => {
 
 app.put("/api/calls/updateStatus", async (req, res) => {
   try {
-    const { callNos, status, extra } = req.body;
+    const {
+      callNo,
+      completedBy,
+      completionDate,
+      warrantyType,
+      amountCollected,
+      status,
+    } = req.body;
 
-    if (!callNos || callNos.length === 0)
-      return res.status(400).json({ error: "No calls selected" });
+    if (!callNo)
+      return res.status(400).json({ error: "Call number is required" });
+    if (!completedBy)
+      return res.status(400).json({ error: "Completed by is required" });
+    if (!completionDate)
+      return res.status(400).json({ error: "Completion date is required" });
+    if (!warrantyType)
+      return res.status(400).json({ error: "Warranty type is required" });
 
-    let updateData = { status };
+    // ✅ Build update object dynamically
+    const updateFields = {
+      status: status || "completed",
+      completedBy,
+      completionDate,
+      warrantyType,
+    };
 
-    // Direct Completed
-    if (status === "completed" && extra?.completionDate) {
-      updateData.completionDate = extra.completionDate;
-      updateData.spareCode = "";
-      updateData.spareName="";
-      updateData.qty="";
+    if (warrantyType === "Out of Warranty") {
+      updateFields.amountCollected = amountCollected || 0;
+    } else {
+      updateFields.amountCollected = 0;
     }
 
-    // Spare Allocated or Replacement Done
-    if (
-      (status === "spare allocated" || status === "replacement done")
-    ) {
-      if (extra?.defectiveSubmitted === "yes") {
-        updateData.status = "completed";
-        updateData.completionDate = extra?.completionDate || new Date();
-         updateData.defectiveSubmitted = "yes";
-      } else {
-        // Defective NOT returned → store amount received
-        if (extra?.amountReceived !== undefined) {
-          updateData.amountReceived = extra.amountReceived;
-        }
-        updateData.defectiveSubmitted = "no";
-      }
-    }
-
-    // Appointment Date
-    if (status === "appointment" && extra?.appointmentDate) {
-      updateData.appointmentDate = extra.appointmentDate;
-    }
-
-    // Escalation / Cancel
-    if ((status === "escalation" || status === "cancel") && extra?.reason) {
-      updateData.reason = extra.reason;
-    }
-
-    // Spare Pending
-    if (status === "spare pending") {
-      updateData.spareCode = extra?.spareCode || "";
-      updateData.spareName = extra?.spareName || "";
-      updateData.qty = extra?.qty || 0;
-    }
-
-    await CallDetail.updateMany(
-      { callNo: { $in: callNos } },
-      { $set: updateData }
+    // ✅ Update call record
+    const updatedCall = await CallDetail.findOneAndUpdate(
+      { callNo },
+      { $set: updateFields },
+      { new: true }
     );
 
-    res.json({ success: true, message: "Status updated successfully" });
+    if (!updatedCall) {
+      return res.status(404).json({ error: "Call not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Call marked as completed successfully",
+      updatedCall,
+    });
   } catch (err) {
-    console.error("Error updating status:", err);
-    res.status(500).json({ error: "Failed to update status" });
+    console.error("Error updating call status:", err);
+    res.status(500).json({ error: "Failed to update call status" });
   }
 });
+
 
 
 // Get all calls for a specific technician where status is not completed
