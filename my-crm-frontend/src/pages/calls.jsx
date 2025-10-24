@@ -10,30 +10,28 @@ export default function Calls() {
     <div className="p-4">
       {/* Sub Navigation */}
       <div className="flex gap-4 mb-6 border-b pb-3">
-        <NavLink to="manual" className={linkClass}>
+        {/*  <NavLink to="manual" className={linkClass}>
           Manual Call Loading
-        </NavLink>
+        </NavLink> */}
         <NavLink to="upload" className={linkClass}>
           Upload Calls
         </NavLink>
-        <NavLink to="allocate" className={linkClass}>
+        {/* <NavLink to="allocate" className={linkClass}>
           Allocate Calls
-        </NavLink>
+        </NavLink>*/}
         <NavLink to="search" className={linkClass}>
           Complete Status
         </NavLink>
-        <NavLink to="pending" className={linkClass}>
+        {/* <NavLink to="pending" className={linkClass}>
           Pending Calls
-        </NavLink>
+        </NavLink>*/}
         <NavLink to="transfer" className={linkClass}>
           Transfer Calls
         </NavLink>
          <NavLink to="searchcalls" className={linkClass}>
           Search Calls
         </NavLink>
-        <NavLink to="resend" className={linkClass}>
-          Resend WhatsApp
-        </NavLink>
+        
        
          <NavLink to="reports" className={linkClass}>
           Reports
