@@ -1867,7 +1867,7 @@ app.get("/api/calls/technician", async (req, res) => {
 
     const calls = await CallDetail.find({
       technician: { $regex: `^${technician}$`, $options: "i" },
-      status: { $ne: "completed" }
+       { status: { $nin: ["completed", "cancel", "replacement done"] } }
     });
 
     res.json(calls);
