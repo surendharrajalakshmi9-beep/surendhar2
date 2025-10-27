@@ -2,247 +2,192 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 
-export default function Requestspares() {
-  const [requests, setRequests] = useState([]);
-  const [spares, setSpares] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function RequestSpare() {
+  const [brands, setBrands] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
   const [brand, setBrand] = useState("");
+  const [spareCode, setSpareCode] = useState("");
+  const [spareDetails, setSpareDetails] = useState(null);
+  const [callNo, setCallNo] = useState("");
+  const [technician, setTechnician] = useState("");
+  const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 5;
-  const [brands, setBrands] = useState([]);
-
-  // ✅ Fetch brands from backend
+  // ✅ Fetch brands
   useEffect(() => {
     const fetchBrands = async () => {
       try {
         const res = await fetch("/api/brands");
         const data = await res.json();
         if (res.ok) setBrands(data);
-        else toast.error("Failed to fetch brands");
-      } catch {
-        toast.error("Server error while fetching brands");
+      } catch (error) {
+        toast.error("Error fetching brands");
       }
     };
     fetchBrands();
   }, []);
 
-  // Fetch spares list
+  // ✅ Fetch technician list
   useEffect(() => {
-    const fetchSpares = async () => {
+    const fetchTechs = async () => {
       try {
-        const spareRes = await axios.get("/api/spares");
-        setSpares(spareRes.data.map(s => s.itemNo)); // store spare codes only
-      } catch (error) {
-        console.error("Error fetching spares:", error);
+        const res = await axios.get("/api/technicians");
+        setTechnicians(res.data || []);
+      } catch {
+        toast.error("Error fetching technicians");
       }
     };
-    fetchSpares();
+    fetchTechs();
   }, []);
 
-  // Fetch spare requests for brand
-  useEffect(() => {
-    if (!brand) {
-      setRequests([]);
+  // ✅ Fetch spare details
+  const fetchSpareDetails = async () => {
+    if (!spareCode.trim() || !brand) {
+      toast.error("Select brand and enter spare code");
       return;
     }
-    const fetchRequests = async () => {
-      setLoading(true);
-      try {
-        const res = await axios.get(
-          `/api/callDetailsWithSpare?brand=${brand}`
-        );
-        const filtered = res.data.filter(
-          (call) => call.spareCode?.trim() !== ""
-        );
-        setRequests(filtered);
-      } catch (error) {
-        console.error("Error fetching spare requests:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRequests();
-  }, [brand, refreshKey]);
-
- // Allocate handler
-const handleAllocate = async (callNo) => {
-  try {
-    await axios.post(`/api/allocate/${callNo}`, {
-      status: "Spare Allocated"
-    });
-    toast.success("Spare allocated successfully!");
-    setRefreshKey(prev => prev + 1); // triggers re-fetch
-  } catch (error) {
-    console.error("Error allocating spare:", error);
-    toast.error("Failed to allocate spare!");
-  }
-
-  };
-
-  // Reject handler
-  const handleReject = async (callNo) => {
+    setLoading(true);
     try {
-      await axios.put(`/api/calldetails/${callNo}`, {
-        spareCode: "",
-        spareName: "",
-        quantity: "",
-        status: "Spare Not Required",
-      });
-      toast.success("Spare removed from request.");
-      setRefreshKey(prev => prev + 1);
+      const res = await axios.get(`/api/spares?brand=${brand}`);
+      const found = res.data.find(
+        (s) => s.itemNo?.trim().toLowerCase() === spareCode.trim().toLowerCase()
+      );
+      if (found) {
+        setSpareDetails(found);
+        toast.success("Spare found!");
+      } else {
+        setSpareDetails(null);
+        toast.error("Spare not found in this brand");
+      }
     } catch (error) {
-      console.error("Error rejecting spare:", error);
-      toast.error("Failed to reject spare!");
+      toast.error("Error fetching spare details");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Pagination logic
-  const indexOfLast = currentPage * recordsPerPage;
-  const indexOfFirst = indexOfLast - recordsPerPage;
-  const currentRecords = requests.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(requests.length / recordsPerPage);
+  // ✅ Allocate Spare
+  const handleAllocate = async () => {
+    if (!callNo.trim()) return toast.error("Enter Call Number");
+    if (!technician.trim()) return toast.error("Select Technician");
+    if (!spareDetails) return toast.error("No spare selected");
 
-  // Brand counts for current brand
-  const brandCounts = requests.reduce(
-    (acc, req) => {
-      if (req.status === "Spare Allocated") {
-        acc.allocated += 1;
-      } else {
-        acc.waiting += 1;
-      }
-      return acc;
-    },
-    { allocated: 0, waiting: 0 }
-  );
+    try {
+      await axios.post(`/api/allocate/${callNo}`, {
+        status: "Spare Allocated",
+        technician,
+        spareCode: spareDetails.itemNo,
+        spareName: spareDetails.itemName,
+        brand,
+      });
+      toast.success("Spare allocated successfully!");
+      setRefreshKey((p) => p + 1);
+      // reset form
+      setSpareDetails(null);
+      setSpareCode("");
+      setCallNo("");
+      setTechnician("");
+    } catch (error) {
+      console.error("Error allocating spare:", error);
+      toast.error("Failed to allocate spare!");
+    }
+  };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Spare Requests</h1>
+    <div className="p-6 bg-gray-50 min-h-screen max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+        Request Spare Allocation
+      </h1>
 
-      {/* Brand Filter */}
+      {/* Select Brand */}
       <div className="mb-4">
-       {/* Brand */}
-        
-          <label className="block text-sm font-medium mb-1">Select Brand</label>
-          <select
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            className="border rounded p-2 w-full"
-          >
-            <option value="">All</option>
-            {brands.map((b) => (
-              <option key={b._id} value={b.name}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <label className="block font-medium mb-1">Select Brand</label>
+        <select
+          value={brand}
+          onChange={(e) => setBrand(e.target.value)}
+          className="border rounded p-2 w-full"
+        >
+          <option value="">-- Select Brand --</option>
+          {brands.map((b) => (
+            <option key={b._id} value={b.name}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      {/* Counts */}
-      {brand && (
-        <div className="mb-4">
-          <p><b>Allocated:</b> {brandCounts.allocated}</p>
-          <p><b>Waiting to Allocate:</b> {brandCounts.waiting}</p>
-          <p><b>Total:</b> {brandCounts.allocated + brandCounts.waiting}</p>
+      {/* Enter Spare Code */}
+      <div className="mb-4">
+        <label className="block font-medium mb-1">Enter Spare Code</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={spareCode}
+            onChange={(e) => setSpareCode(e.target.value)}
+            className="border rounded p-2 flex-1"
+            placeholder="Enter spare item code"
+          />
+          <button
+            onClick={fetchSpareDetails}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+            disabled={loading}
+          >
+            {loading ? "Searching..." : "Search"}
+          </button>
+        </div>
+      </div>
+
+      {/* Spare Details */}
+      {spareDetails && (
+        <div className="bg-white border rounded-lg p-4 mb-4 shadow-sm">
+          <h2 className="font-semibold text-lg mb-2 text-gray-800">
+            Spare Details
+          </h2>
+          <p><b>Item No:</b> {spareDetails.itemNo}</p>
+          <p><b>Item Name:</b> {spareDetails.itemName}</p>
+          <p><b>Quantity:</b> {spareDetails.quantity}</p>
+          <p><b>MRP:</b> ₹{spareDetails.mrp}</p>
+          <p><b>Status:</b> {spareDetails.status || "Available"}</p>
         </div>
       )}
 
-      {loading ? (
-        <p className="text-center text-gray-500 mt-6">Loading spare requests...</p>
-      ) : (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-100 border-b">
-              <tr>
-                <th className="p-3 text-sm font-semibold text-gray-700">Call No</th>
-                <th className="p-3 text-sm font-semibold text-gray-700">Customer</th>
-                <th className="p-3 text-sm font-semibold text-gray-700">Spare Code</th>
-                <th className="p-3 text-sm font-semibold text-gray-700">Spare Name</th>
-                <th className="p-3 text-sm font-semibold text-gray-700">Quantity</th>
-                <th className="p-3 text-sm font-semibold text-gray-700">Technician Name</th>
-                <th className="p-3 text-sm font-semibold text-gray-700">Address</th>
-                <th className="p-3 text-sm font-semibold text-gray-700 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentRecords.length > 0 ? (
-                currentRecords.map((req) => (
-                  <tr key={req._id} className="border-b hover:bg-gray-50">
-                    <td className="p-3 text-sm text-gray-800">{req.callNo}</td>
-                    <td className="p-3 text-sm text-gray-800">{req.customerName}</td>
-                    <td className="p-3 text-sm text-gray-800">{req.spareCode}</td>
-                    <td className="p-3 text-sm text-gray-600">{req.spareName}</td>
-                    <td className="p-3 text-sm text-gray-600">{req.qty}</td>
-                    <td className="p-3 text-sm text-gray-600">{req.technician}</td>
-                    <td className="p-3 text-sm text-gray-600">{req.address}</td>
-                    <td className="p-3 text-sm flex gap-2 justify-center">
-                      <button
-                        onClick={() => handleAllocate(req.callNo)}
-                        style={{
-                          backgroundColor: req.status === "Spare Allocated" ? "darkblue" : "green",
-                          color: "white",
-                          padding: "6px 12px",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: req.status === "Spare Allocated" ? "not-allowed" : "pointer"
-                        }}
-                        disabled={req.status === "Spare Allocated"}
-                      >
-                        {req.status === "Spare Allocated" ? "Allocated" : "Allocate"}
-                      </button>
-
-                      <button
-                        onClick={() => handleReject(req.callNo)}
-                        style={{
-                          backgroundColor: "red",
-                          color: "white",
-                          padding: "6px 12px",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: req.status === "Spare Allocated" ? "not-allowed" : "pointer",
-                          opacity: req.status === "Spare Allocated" ? 0.5 : 1
-                        }}
-                        disabled={req.status === "Spare Allocated"}
-                      >
-                        Spare not required
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8" className="text-center p-4 text-gray-500">
-                    No spare requests found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-
-          {/* Pagination */}
-          <div className="flex justify-center items-center p-4">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-gray-300 rounded mr-2"
-            >
-              Previous
-            </button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 bg-gray-300 rounded ml-2"
-            >
-              Next
-            </button>
+      {/* Call and Technician */}
+      {spareDetails && (
+        <>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">Enter Call Number</label>
+            <input
+              type="text"
+              value={callNo}
+              onChange={(e) => setCallNo(e.target.value)}
+              className="border rounded p-2 w-full"
+              placeholder="Enter call number"
+            />
           </div>
-        </div>
+
+          <div className="mb-6">
+            <label className="block font-medium mb-1">Select Technician</label>
+            <select
+              value={technician}
+              onChange={(e) => setTechnician(e.target.value)}
+              className="border rounded p-2 w-full"
+            >
+              <option value="">-- Select Technician --</option>
+              {technicians.map((t) => (
+                <option key={t._id} value={t.name}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={handleAllocate}
+            className="bg-green-600 text-white px-6 py-2 rounded w-full font-semibold"
+          >
+            Submit & Allocate
+          </button>
+        </>
       )}
     </div>
   );
