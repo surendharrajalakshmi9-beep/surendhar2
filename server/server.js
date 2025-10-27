@@ -741,6 +741,24 @@ app.get("/api/returnspares", async (req, res) => {
   }
 });
 
+app.get("/api/spares", async (req, res) => {
+  try {
+    const { brand } = req.query;
+    const filter = {};
+
+    // ✅ Filter by brand if provided
+    if (brand && brand.toLowerCase() !== "all") {
+      filter.brand = brand;
+    }
+
+    const spares = await Spare.find(filter).sort({ itemNo: 1 }); // sort by code for consistency
+    res.json(spares);
+  } catch (error) {
+    console.error("Error fetching spares:", error);
+    res.status(500).json({ error: "Failed to fetch spares" });
+  }
+});
+
 
 // Get spare details by code
 app.get("/api/spares/:code", async (req, res) => {
