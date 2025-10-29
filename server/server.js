@@ -384,6 +384,50 @@ app.post("/api/allocatespare/:callNo", async (req, res) => {
   }
 });
 
+// 1️⃣ Get allocated calls for technician
+app.get("/api/calls/allocated", async (req, res) => {
+  try {
+    const { brand, technician } = req.query;
+
+    const query = {
+      brand,
+      technician,
+      status: "Spare Allocated", // show only allocated calls
+    };
+
+    const calls = await CallDetail.find(query).sort({ _id: -1 });
+    res.json(calls);
+  } catch (err) {
+    console.error("Error fetching allocated calls:", err);
+    res.status(500).json({ error: "Failed to fetch calls" });
+  }
+});
+
+// 2️⃣ Update defective submission / completion
+app.put("/api/calls/defective/:callNo", async (req, res) => {
+  try {
+    const { callNo } = req.params;
+    const { defectiveSubmitted, amountReceived } = req.body;
+
+    const call = await CallDetail.findOne({ callNo });
+    if (!call) return res.status(404).json({ error: "Call not found" });
+
+    call.defectiveSubmitted = defectiveSubmitted;
+
+    if (defectiveSubmitted === "yes") {
+      call.status = "completed";
+    } else if (defectiveSubmitted === "no") {
+      call.amountReceived = amountReceived || 0;
+      call.status = "completed"; // still completed after payment
+    }
+
+    await call.save();
+    res.json({ success: true, call });
+  } catch (err) {
+    console.error("Error updating defective status:", err);
+    res.status(500).json({ error: "Failed to update defective status" });
+  }
+});
 
 
 app.post("/api/allocate/:callNo", async (req, res) => {
