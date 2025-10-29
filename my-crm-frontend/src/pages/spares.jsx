@@ -17,7 +17,10 @@ export default function Calls() {
           Incoming Spares
         </NavLink>
         <NavLink to="request" className={linkClass}>
-          Spare Requests
+          Spare Allocation
+        </NavLink>
+         <NavLink to="defective" className={linkClass}>
+          Defective Submission
         </NavLink>
         <NavLink to="return" className={linkClass}>
           Spare Return
