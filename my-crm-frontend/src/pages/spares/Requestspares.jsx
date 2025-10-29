@@ -83,7 +83,7 @@ export default function RequestSpares() {
     if (!callNo || !technician || !spareCode) return toast.error("Fill all fields");
 
     try {
-      await axios.post(`/api/allocate/${callNo}`, {
+      await axios.post(`/api/allocatespare/${callNo}`, {
         technician,
         spareCode,
         spareName: spareDetails?.itemName || "",
