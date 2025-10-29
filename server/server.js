@@ -320,6 +320,69 @@ app.put("/api/incomingspares/:itemNo", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// ✅ Allocate Spare to a Call
+app.post("/api/allocatespare/:callNo", async (req, res) => {
+  try {
+    const { callNo } = req.params;
+    const { technician, spareCode, spareName, quantity, status } = req.body;
+
+    // 1️⃣ Find the Call
+    const call = await CallDetail.findOne({ callNo });
+    if (!call) {
+      return res.status(404).json({ error: "Call not found" });
+    }
+
+    // 2️⃣ Find the Spare
+    const spare = await Spare.findOne({ itemNo: spareCode });
+    if (!spare) {
+      return res.status(404).json({ error: "Spare not found in inventory" });
+    }
+
+    // 3️⃣ Check Quantity Availability
+    if (spare.quantity < quantity) {
+      // ❌ Not enough quantity
+      call.status = "Spare Pending"; // Mark pending if stock insufficient
+      call.technician = technician;
+      call.spareCode = spareCode;
+      call.spareName = spareName;
+      call.qty = quantity;
+      await call.save();
+
+      return res.status(400).json({
+        success: false,
+        message: `Only ${spare.quantity} available, but ${quantity} requested.`,
+        available: spare.quantity,
+      });
+    }
+
+    // 4️⃣ Deduct Spare Quantity from Inventory
+    spare.quantity -= quantity;
+    if (spare.quantity <= 0) {
+      // remove from DB when out of stock
+      await Spare.deleteOne({ _id: spare._id });
+    } else {
+      await spare.save();
+    }
+
+    // 5️⃣ Update Call Details
+    call.technician = technician;
+    call.spareCode = spareCode;
+    call.spareName = spareName;
+    call.qty = quantity;
+    call.status = status || "Spare Allocated";
+
+    await call.save();
+
+    res.json({
+      success: true,
+      message: "Spare allocated successfully",
+      call,
+    });
+  } catch (err) {
+    console.error("Error allocating spare:", err);
+    res.status(500).json({ error: "Server error during spare allocation" });
+  }
+});
 
 
 
