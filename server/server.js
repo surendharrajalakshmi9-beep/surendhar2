@@ -404,21 +404,23 @@ app.get("/api/calls/allocated", async (req, res) => {
 });
 
 // 2️⃣ Update defective submission / completion
+
 app.put("/api/calls/defective/:callNo", async (req, res) => {
   try {
     const { callNo } = req.params;
-    const { defectiveSubmitted, amountReceived } = req.body;
+    const { defectiveSubmitted, amountReceived, completionDate } = req.body;
 
     const call = await CallDetail.findOne({ callNo });
     if (!call) return res.status(404).json({ error: "Call not found" });
 
     call.defectiveSubmitted = defectiveSubmitted;
+    call.completionDate = completionDate ? new Date(completionDate) : new Date();
 
     if (defectiveSubmitted === "yes") {
       call.status = "completed";
     } else if (defectiveSubmitted === "no") {
       call.amountReceived = amountReceived || 0;
-      call.status = "completed"; // still completed after payment
+      call.status = "completed";
     }
 
     await call.save();
@@ -428,6 +430,7 @@ app.put("/api/calls/defective/:callNo", async (req, res) => {
     res.status(500).json({ error: "Failed to update defective status" });
   }
 });
+
 
 
 app.post("/api/allocate/:callNo", async (req, res) => {
