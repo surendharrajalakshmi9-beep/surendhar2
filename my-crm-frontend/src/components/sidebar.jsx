@@ -38,7 +38,7 @@ export default function Sidebar() {
           {!collapsed && <span>Call Details</span>}
         </NavLink>
 
-        <NavLink to="/sparesdet" className={linkClass}>
+        <NavLink to="/spareentry" className={linkClass}>
           <Package />
           {!collapsed && <span>Spares & Defective </span>}
         </NavLink>
