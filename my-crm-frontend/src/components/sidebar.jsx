@@ -40,9 +40,14 @@ export default function Sidebar() {
 
         <NavLink to="/spares" className={linkClass}>
           <Package />
-          {!collapsed && <span>Spares</span>}
+          {!collapsed && <span>Spares & Defective </span>}
         </NavLink>
 
+          <NavLink to="/spares" className={linkClass}>
+          <Package />
+          {!collapsed && <span>Spare Details</span>}
+        </NavLink>
+        
         <NavLink to="/technicians" className={linkClass}>
           <Wrench />
           {!collapsed && <span>Employees</span>}
