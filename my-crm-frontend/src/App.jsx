@@ -74,7 +74,7 @@ const [data, setData] = useState(null);
       </Route>
 
  <Route path="sparesdet" element={<Sparesdet />}>
-       
+        <Route index element={<Navigate to="request" replace />} /> 
         <Route path="request" element={<Requestspares />} />
         <Route path="defective" element={<DefectiveSubmission />} />
        
