@@ -851,24 +851,57 @@ app.get("/api/returnspares", async (req, res) => {
   }
 });
 
-app.get("/api/spares", async (req, res) => {
+// ✅ Search spare in Spare first, then in Sbom
+app.get("/api/spares/search", async (req, res) => {
   try {
-    const { brand } = req.query;
-    const filter = {};
-
-    // ✅ Filter by brand if provided
-    if (brand && brand.toLowerCase() !== "all") {
-      filter.brand = brand;
+    const { brand, code } = req.query;
+    if (!brand || !code) {
+      return res.status(400).json({ error: "Brand and code required" });
     }
 
-    const spares = await Spare.find(filter).sort({ itemNo: 1 }); // sort by code for consistency
-    res.json(spares);
-  } catch (error) {
-    console.error("Error fetching spares:", error);
-    res.status(500).json({ error: "Failed to fetch spares" });
+    // Search in Spare schema first
+    const spare = await Spare.findOne({
+      brand,
+      itemNo: { $regex: `^${code}$`, $options: "i" },
+    });
+
+    if (spare) {
+      return res.json({
+        source: "spare",
+        available: true,
+        itemNo: spare.itemNo,
+        itemName: spare.itemName,
+        message: "Spare available in stock",
+      });
+    }
+
+    // If not found in Spare, check Sbom
+    const sbom = await Sbom.findOne({
+     // brand,
+      itemno: { $regex: `^${code}$`, $options: "i" },
+    });
+
+    if (sbom) {
+      return res.json({
+        source: "sbom",
+        available: false,
+        itemNo: sbom.itemno,
+        itemName: sbom.itemname,
+        message: "Spare found in SBOM but not in stock",
+      });
+    }
+
+    // Not found anywhere
+    return res.json({
+      source: "none",
+      available: false,
+      message: "Spare not found in stock or SBOM",
+    });
+  } catch (err) {
+    console.error("Error searching spare:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
-
 
 // Get spare details by code
 app.get("/api/spares/:code", async (req, res) => {
