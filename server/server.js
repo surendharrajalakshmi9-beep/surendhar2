@@ -332,44 +332,77 @@ app.post("/api/allocatespare/:callNo", async (req, res) => {
       return res.status(404).json({ error: "Call not found" });
     }
 
-    // 2️⃣ Find the Spare
-    const spare = await Spare.findOne({ itemNo: spareCode });
+    // 2️⃣ Try finding Spare in inventory
+    let spare = await Spare.findOne({ itemNo: spareCode });
+    let sbomItem = null;
+    let finalSpareName = spareName;
+    let finalStatus = status;
+
+    // 3️⃣ If not found in Spare, check in SBOM
     if (!spare) {
-      return res.status(404).json({ error: "Spare not found in inventory" });
+      sbomItem = await Sbom.findOne({ itemno: spareCode });
+
+      if (sbomItem) {
+        // Found in SBOM but not in stock
+        call.status = "Spare Pending";
+        call.technician = technician;
+        call.spareCode = spareCode;
+        call.spareName = sbomItem.itemname || spareName || "Unnamed Spare";
+        call.qty = quantity;
+        await call.save();
+
+        return res.status(200).json({
+          success: true,
+          message: `Spare not in stock but found in SBOM. Marked as Spare Pending.`,
+          call,
+        });
+      } else {
+        // Not found in both Spare and SBOM
+        call.status = "Spare Pending";
+        call.technician = technician;
+        call.spareCode = spareCode;
+        call.spareName = spareName || "Manual Spare Entry";
+        call.qty = quantity;
+        await call.save();
+
+        return res.status(200).json({
+          success: true,
+          message: `Spare not found in stock or SBOM. Marked as Spare Pending.`,
+          call,
+        });
+      }
     }
 
-    // 3️⃣ Check Quantity Availability
+    // 4️⃣ If spare found but quantity is insufficient
     if (spare.quantity < quantity) {
-      // ❌ Not enough quantity
-      call.status = "Spare Pending"; // Mark pending if stock insufficient
+      call.status = "Spare Pending";
       call.technician = technician;
       call.spareCode = spareCode;
-      call.spareName = spareName;
+      call.spareName = spare.itemName;
       call.qty = quantity;
       await call.save();
 
       return res.status(400).json({
         success: false,
-        message: `Only ${spare.quantity} available, but ${quantity} requested.`,
+        message: `Only ${spare.quantity} available, but ${quantity} requested. Marked as Spare Pending.`,
         available: spare.quantity,
       });
     }
 
-    // 4️⃣ Deduct Spare Quantity from Inventory
+    // 5️⃣ Deduct Quantity and Update Spare
     spare.quantity -= quantity;
     if (spare.quantity <= 0) {
-      // remove from DB when out of stock
       await Spare.deleteOne({ _id: spare._id });
     } else {
       await spare.save();
     }
 
-    // 5️⃣ Update Call Details
+    // 6️⃣ Update Call Detail
     call.technician = technician;
     call.spareCode = spareCode;
-    call.spareName = spareName;
+    call.spareName = spare.itemName;
     call.qty = quantity;
-    call.status = status || "Spare Allocated";
+    call.status = finalStatus || "Spare Allocated";
 
     await call.save();
 
