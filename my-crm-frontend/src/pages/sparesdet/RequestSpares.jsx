@@ -53,7 +53,7 @@ export default function RequestSpares() {
       const data = res.data;
 
       if (data.source === "spare" && data.available) {
-        setSpareDetails({ itemName: data.itemName, itemNo: data.itemNo });
+        setSpareDetails({ itemName: data.itemName, itemNo: data.itemNo, quantity: data.quantity });
         setSpareStatus("available");
         setManualSpareName("");
         toast.success(data.message);
