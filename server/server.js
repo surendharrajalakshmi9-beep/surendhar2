@@ -561,6 +561,21 @@ app.put("/api/allocate/:callNo", async (req, res) => {
   }
 });
 
+app.put("/api/spares/:id", async (req, res) => {
+  try {
+    const { quantity, mrp, mslType } = req.body;
+    const updated = await Spare.findByIdAndUpdate(
+      req.params.id,
+      { quantity, mrp, mslType },
+      { new: true }
+    );
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update spare" });
+  }
+});
+
+
 // Get all technicians
 // GET /api/technicians
 app.get("/api/technicians", async (req, res) => {
