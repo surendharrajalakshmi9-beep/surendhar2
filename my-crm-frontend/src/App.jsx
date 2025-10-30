@@ -22,6 +22,8 @@ import ResendAssignedCalls from "./pages/calls/resend";
 import Requestspares from "./pages/spares/Requestspares.jsx";
 import Returnspare from "./pages/spares/Returnspare.jsx";
 import DefectiveSubmission from "./pages/spares/DefectiveSubmission.jsx";
+import SpareUpdation from "./pages/spares/SpareUpdation.jsx";
+import SparePending from "./pages/spares/SparePending.jsx";
 import Employee from "./pages/empl/Employee";
 import EmployeeList from "./pages/empl/EmployeeList";
 //import { getData } from "./api";
@@ -62,6 +64,8 @@ const [data, setData] = useState(null);
         <Route path="income" element={<Incomingspares/>} />
         <Route path="request" element={<Requestspares />} />
         <Route path="defective" element={<DefectiveSubmission />} />
+        <Route path="spareupdate" element={<SpareUpdation />} />
+        <Route path="sparepending" element={<SparePending />} />
         <Route path="return" element={<Returnspare />} />
         <Route path="update" element={<Cnupdate/>} />
       
