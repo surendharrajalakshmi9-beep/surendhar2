@@ -10,27 +10,16 @@ export default function Calls() {
     <div className="p-4">
       {/* Sub Navigation */}
       <div className="flex gap-4 mb-6 border-b pb-3">
-        <NavLink to="upload" className={linkClass}>
-          Upload SBOM
-        </NavLink>
-        <NavLink to="income" className={linkClass}>
-          Incoming Spares
-        </NavLink>
         <NavLink to="request" className={linkClass}>
           Spare Allocation
+        </NavLink>
+          <NavLink to="sparepending" className={linkClass}>
+          Spare Requests
         </NavLink>
          <NavLink to="defective" className={linkClass}>
           Defective Submission
         </NavLink>
-        <NavLink to="return" className={linkClass}>
-          Spare Return
-        </NavLink>
-        <NavLink to="update" className={linkClass}>
-          Update CN
-        </NavLink>
-        <NavLink to="reports" className={linkClass}>
-          Reports
-        </NavLink>
+       
       </div>
 
       {/* Sub Pages */}
