@@ -13,6 +13,7 @@ import TransferCalls from "./pages/calls/TransferCalls";
 import SearchCalls from "./pages/calls/SearchCalls";
 import Reports from "./pages/calls/Reports";
 import Spares from "./pages/spares";
+import Sparesdet from "./pages/spareentry";
 import Technicians from "./pages/technician";
 import UploadSBOM from "./pages/spares/UploadSBOM";
 import Incomingspares from "./pages/spares/Incomingspares.jsx";
