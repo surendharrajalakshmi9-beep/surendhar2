@@ -1118,6 +1118,27 @@ app.get("/api/returnDates", async (req, res) => {
   }
 });
 
+
+// ✅ DELETE Spare by ID
+app.delete("/api/spares/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const spare = await Spare.findById(id);
+    if (!spare) {
+      return res.status(404).json({ error: "Spare not found" });
+    }
+
+    await Spare.deleteOne({ _id: id });
+
+    res.json({ success: true, message: "Spare deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting spare:", err);
+    res.status(500).json({ error: "Server error during spare deletion" });
+  }
+});
+
+
 app.get("/api/dashboardCounts", async (req, res) => {
   try {
     const { brand } = req.query;
