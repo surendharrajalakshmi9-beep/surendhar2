@@ -626,6 +626,26 @@ app.get("/api/technicians", async (req, res) => {
   }
 });
 
+// ✅ Get spares by brand (case-insensitive + sorted)
+app.get("/api/spares", async (req, res) => {
+  try {
+    const { brand } = req.query;
+
+    // Case-insensitive filter
+    const filter = brand ? { brand: new RegExp(`^${brand}$`, "i") } : {};
+
+    // Fetch and sort alphabetically by itemName
+    const spares = await Spare.find(filter).sort({ itemName: 1 });
+
+    console.log("Fetched spares for brand:", brand, spares.length);
+
+    res.json(spares);
+  } catch (err) {
+    console.error("❌ Error fetching spares:", err);
+    res.status(500).json({ error: "Error fetching spares" });
+  }
+});
+
 // --- APPROVE or REJECT Return Spare ---
 app.put("/api/spares/approval/:id", async (req, res) => {
   try {
