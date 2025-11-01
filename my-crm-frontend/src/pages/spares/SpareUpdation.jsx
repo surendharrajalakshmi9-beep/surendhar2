@@ -11,14 +11,22 @@ export default function SpareUpdation() {
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 5;
 
-  // ✅ Fetch brands
+  // ✅ Fetch brands safely
   useEffect(() => {
     const fetchBrands = async () => {
       try {
         const res = await axios.get("/api/brands");
-        setBrands(res.data || []);
-      } catch {
+        console.log("Fetched brands:", res.data);
+
+        const brandList = Array.isArray(res.data)
+          ? res.data
+          : res.data.data || [];
+
+        setBrands(brandList);
+      } catch (err) {
+        console.error(err);
         toast.error("Error fetching brands");
+        setBrands([]);
       }
     };
     fetchBrands();
@@ -30,8 +38,12 @@ export default function SpareUpdation() {
     setLoading(true);
     try {
       const res = await axios.get(`/api/spares?brand=${brand}`);
-      setSpares(res.data);
+      const spareList = Array.isArray(res.data)
+        ? res.data
+        : res.data.data || [];
+      setSpares(spareList);
     } catch (err) {
+      console.error(err);
       toast.error("Error fetching spares");
     } finally {
       setLoading(false);
@@ -83,11 +95,12 @@ export default function SpareUpdation() {
           className="border p-2 rounded w-1/3"
         >
           <option value="">-- Select Brand --</option>
-          {brands.map((b, i) => (
-            <option key={i} value={b.name || b}>
-              {b.name || b}
-            </option>
-          ))}
+          {Array.isArray(brands) &&
+            brands.map((b, i) => (
+              <option key={i} value={b.name || b}>
+                {b.name || b}
+              </option>
+            ))}
         </select>
 
         <button
@@ -150,6 +163,7 @@ export default function SpareUpdation() {
   );
 }
 
+// ✅ Editable Row
 function EditableRow({ spare, onSave, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
   const [quantity, setQuantity] = useState(spare.quantity);
