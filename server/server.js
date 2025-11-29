@@ -2050,59 +2050,92 @@ app.get("/api/calls/pending", async (req, res) => {
 });
 
 
+// Ensure you have this earlier in your server:
+// app.use(express.json());
+
 app.put("/api/calls/updateStatus", async (req, res) => {
   try {
     const {
       callNo,
-      completedBy,
-      completionDate,
-      warrantyType,
-      amountCollected,
-      status,
+      completedBy,      // frontend field
+      completionDate,   // frontend field (string)
+      warrantyType,     // frontend: "Warranty" / "Out of Warranty"
+      amountCollected,  // frontend field (number or string)
+      status,           // optional, defaults to "completed"
     } = req.body;
 
-    if (!callNo)
-      return res.status(400).json({ error: "Call number is required" });
-    if (!completedBy)
-      return res.status(400).json({ error: "Completed by is required" });
-    if (!completionDate)
-      return res.status(400).json({ error: "Completion date is required" });
-    if (!warrantyType)
-      return res.status(400).json({ error: "Warranty type is required" });
+    // Basic validation (you can relax these if desired)
+    if (!callNo) return res.status(400).json({ error: "Call number is required" });
+    if (!completedBy) return res.status(400).json({ error: "Completed by is required" });
+    if (!completionDate) return res.status(400).json({ error: "Completion date is required" });
+    if (!warrantyType) return res.status(400).json({ error: "Warranty type is required" });
 
-    // ✅ Build update object dynamically
-    const updateFields = {
-      status: status || "completed",
-      completedBy,
-      completionDate,
-      warrantyType,
-    };
-
-    if (warrantyType === "Out of Warranty") {
-      updateFields.amountCollected = amountCollected || 0;
-    } else {
-      updateFields.amountCollected = 0;
+    // Normalize callNo (remove possible suffix like "-1") and do case-insensitive search
+    let cleanCallNo = callNo.toString().trim();
+    if (cleanCallNo.includes("-")) {
+      // optional: strip suffix after last hyphen if that suffix is numeric; adjust if you use different format
+      const parts = cleanCallNo.split("-");
+      if (!isNaN(Number(parts[parts.length - 1]))) {
+        parts.pop();
+        cleanCallNo = parts.join("-");
+      }
     }
 
-    // ✅ Update call record
-    const updatedCall = await CallDetail.findOneAndUpdate(
-      { callNo },
-      { $set: updateFields },
-      { new: true }
-    );
+    const call = await CallDetail.findOne({
+      callNo: { $regex: `^${cleanCallNo}$`, $options: "i" },
+    });
 
-    if (!updatedCall) {
+    if (!call) {
+      console.log("updateStatus: call not found for", cleanCallNo);
       return res.status(404).json({ error: "Call not found" });
     }
 
-    res.json({
-      success: true,
-      message: "Call marked as completed successfully",
-      updatedCall,
+    // Map frontend fields to DB fields
+    call.technician = completedBy; // frontend passes completedBy, DB stores technician
+
+    // Parse and set completionDate
+    const parsedDate = new Date(completionDate);
+    if (!isNaN(parsedDate.getTime())) {
+      call.completionDate = parsedDate;
+    } else {
+      // fallback: try Date constructor anyway
+      call.completionDate = new Date(completionDate);
+    }
+
+    // Warranty mapping
+    call.warrantyStatus = warrantyType;
+
+    // Amount
+    if (warrantyType === "Out of Warranty") {
+      const amt = amountCollected ?? 0;
+      const num = Number(amt);
+      call.amountReceived = isNaN(num) ? 0 : num;
+      // Optional: keep owamtReceived too if you want to track separately
+      call.owamtReceived = isNaN(num) ? 0 : num;
+    } else {
+      call.amountReceived = 0;
+      call.owamtReceived = 0;
+    }
+
+    // Status
+    call.status = status || "completed";
+
+    // Save
+    await call.save();
+
+    console.log("updateStatus: updated", {
+      callNo: call.callNo,
+      technician: call.technician,
+      completionDate: call.completionDate,
+      warrantyStatus: call.warrantyStatus,
+      amountReceived: call.amountReceived,
+      status: call.status,
     });
+
+    return res.json({ success: true, call });
   } catch (err) {
     console.error("Error updating call status:", err);
-    res.status(500).json({ error: "Failed to update call status" });
+    return res.status(500).json({ error: "Failed to update call status" });
   }
 });
 
