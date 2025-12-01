@@ -2053,61 +2053,73 @@ app.get("/api/calls/pending", async (req, res) => {
 // Ensure you have this earlier in your server:
 // app.use(express.json());
 
+// Ensure app.use(express.json()) is enabled in your server bootstrap
+
 app.put("/api/calls/updateStatus", async (req, res) => {
   try {
     const {
       callNo,
-      completedBy,
-      completionDate,
-      warrantyType,
-      amountCollected,
-      status,
+      completedBy,      // from frontend
+      completionDate,   // string (datetime-local)
+      warrantyType,     // "Warranty" | "Out of Warranty"
+      amountCollected,  // optional
+      status,           // optional, default to "completed"
     } = req.body;
 
-    if (!callNo)
-      return res.status(400).json({ error: "Call number is required" });
-    if (!completedBy)
-      return res.status(400).json({ error: "Completed by is required" });
-    if (!completionDate)
-      return res.status(400).json({ error: "Completion date is required" });
-    if (!warrantyType)
-      return res.status(400).json({ error: "Warranty type is required" });
+    // Basic validation
+    if (!callNo) return res.status(400).json({ error: "Call number is required" });
+    if (!completedBy) return res.status(400).json({ error: "Completed by is required" });
+    if (!completionDate) return res.status(400).json({ error: "Completion date is required" });
+    if (!warrantyType) return res.status(400).json({ error: "Warranty type is required" });
 
-    // ✅ Build update object dynamically
-    const updateFields = {
-      status: status || "completed",
-      completedBy,
-      completionDate,
-      warrantyType,
-    };
-
-    if (warrantyType === "Out of Warranty") {
-      updateFields.amountCollected = amountCollected || 0;
-    } else {
-      updateFields.amountCollected = 0;
+    // Tolerant lookup for callNo (strip numeric suffix like -1 if present)
+    let cleanCallNo = callNo.toString().trim();
+    if (cleanCallNo.includes("-")) {
+      const parts = cleanCallNo.split("-");
+      if (!isNaN(Number(parts[parts.length - 1]))) parts.pop();
+      cleanCallNo = parts.join("-");
     }
 
-    // ✅ Update call record
-    const updatedCall = await CallDetail.findOneAndUpdate(
-      { callNo },
-      { $set: updateFields },
-      { new: true }
-    );
-
-    if (!updatedCall) {
-      return res.status(404).json({ error: "Call not found" });
-    }
-
-    res.json({
-      success: true,
-      message: "Call marked as completed successfully",
-      updatedCall,
+    // Case-insensitive find
+    const call = await CallDetail.findOne({
+      callNo: { $regex: `^${cleanCallNo}$`, $options: "i" },
     });
+
+    if (!call) return res.status(404).json({ error: "Call not found" });
+
+    // Map frontend fields to schema fields
+    call.technician = completedBy; // <-- store technician correctly
+
+    // Parse completion date
+    const parsedDate = new Date(completionDate);
+    call.completionDate = isNaN(parsedDate.getTime()) ? new Date(completionDate) : parsedDate;
+
+    // Warranty mapping
+    call.warrantyStatus = warrantyType;
+
+    // Amount mapping (for out of warranty)
+    if (warrantyType === "Out of Warranty") {
+      const amt = Number(amountCollected) || 0;
+      call.amountReceived = amt;   // schema field
+      call.owamtReceived = amt;    // optional duplicate field you have
+    } else {
+      call.amountReceived = 0;
+      call.owamtReceived = 0;
+    }
+
+    // Status
+    call.status = status || "completed";
+
+    // Save the doc
+    await call.save();
+
+    return res.json({ success: true, updatedCall: call });
   } catch (err) {
     console.error("Error updating call status:", err);
-    res.status(500).json({ error: "Failed to update call status" });
+    return res.status(500).json({ error: "Failed to update call status" });
   }
 });
+
 
 
 // Get all calls for a specific technician where status is not completed
