@@ -2072,21 +2072,7 @@ app.put("/api/calls/updateStatus", async (req, res) => {
     if (!completionDate) return res.status(400).json({ error: "Completion date is required" });
     if (!warrantyType) return res.status(400).json({ error: "Warranty type is required" });
 
-    // Tolerant lookup for callNo (strip numeric suffix like -1 if present)
-    let cleanCallNo = callNo.toString().trim();
-    if (cleanCallNo.includes("-")) {
-      const parts = cleanCallNo.split("-");
-      if (!isNaN(Number(parts[parts.length - 1]))) parts.pop();
-      cleanCallNo = parts.join("-");
-    }
-
-    // Case-insensitive find
-    const call = await CallDetail.findOne({
-      callNo: { $regex: `^${cleanCallNo}$`, $options: "i" },
-    });
-
-    if (!call) return res.status(404).json({ error: "Call not found" });
-
+   
     // Map frontend fields to schema fields
     call.technician = completedBy; // <-- store technician correctly
 
