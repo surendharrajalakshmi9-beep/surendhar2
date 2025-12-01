@@ -2059,52 +2059,63 @@ app.put("/api/calls/updateStatus", async (req, res) => {
   try {
     const {
       callNo,
-      completedBy,      // from frontend
-      completionDate,   // string (datetime-local)
-      warrantyType,     // "Warranty" | "Out of Warranty"
-      amountCollected,  // optional
-      status,           // optional, default to "completed"
+      completedBy,
+      completionDate,
+      warrantyType,
+      amountCollected,
+      status,
     } = req.body;
 
-    // Basic validation
-    if (!callNo) return res.status(400).json({ error: "Call number is required" });
-    if (!completedBy) return res.status(400).json({ error: "Completed by is required" });
-    if (!completionDate) return res.status(400).json({ error: "Completion date is required" });
-    if (!warrantyType) return res.status(400).json({ error: "Warranty type is required" });
+    if (!callNo)
+      return res.status(400).json({ error: "Call number is required" });
+    if (!completedBy)
+      return res.status(400).json({ error: "Completed by is required" });
+    if (!completionDate)
+      return res.status(400).json({ error: "Completion date is required" });
+    if (!warrantyType)
+      return res.status(400).json({ error: "Warranty type is required" });
 
-   
-    // Map frontend fields to schema fields
-    call.technician = completedBy; // <-- store technician correctly
-
-    // Parse completion date
+    // Parse date
     const parsedDate = new Date(completionDate);
-    call.completionDate = isNaN(parsedDate.getTime()) ? new Date(completionDate) : parsedDate;
 
-    // Warranty mapping
-    call.warrantyStatus = warrantyType;
+    // Build update fields to match schema
+    const updateFields = {
+      status: status || "completed",
+      technician: completedBy,           // ✔ Correct schema field
+      completionDate: parsedDate,        // ✔ Converted to Date
+      warrantyStatus: warrantyType,      // ✔ Correct schema name
+    };
 
-    // Amount mapping (for out of warranty)
     if (warrantyType === "Out of Warranty") {
-      const amt = Number(amountCollected) || 0;
-      call.amountReceived = amt;   // schema field
-      call.owamtReceived = amt;    // optional duplicate field you have
+      updateFields.amountReceived = Number(amountCollected) || 0;
+      updateFields.owamtReceived = Number(amountCollected) || 0;
     } else {
-      call.amountReceived = 0;
-      call.owamtReceived = 0;
+      updateFields.amountReceived = 0;
+      updateFields.owamtReceived = 0;
     }
 
-    // Status
-    call.status = status || "completed";
+    // Update using findOneAndUpdate
+    const updatedCall = await CallDetail.findOneAndUpdate(
+      { callNo },
+      { $set: updateFields },
+      { new: true }
+    );
 
-    // Save the doc
-    await call.save();
+    if (!updatedCall) {
+      return res.status(404).json({ error: "Call not found" });
+    }
 
-    return res.json({ success: true, updatedCall: call });
+    res.json({
+      success: true,
+      message: "Call marked as completed successfully",
+      updatedCall,
+    });
   } catch (err) {
     console.error("Error updating call status:", err);
-    return res.status(500).json({ error: "Failed to update call status" });
+    res.status(500).json({ error: "Failed to update call status" });
   }
 });
+
 
 
 
